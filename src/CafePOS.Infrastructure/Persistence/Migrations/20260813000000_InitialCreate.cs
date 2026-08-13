@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore.Migrations;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 namespace CafePOS.Infrastructure.Persistence.Migrations;
+[DbContext(typeof(CafePosDbContext))]
 [Migration("20260813000000_InitialCreate")]
 public sealed class InitialCreate : Migration
 {
