@@ -5,13 +5,14 @@
 POS local de escritorio para cafetería, construido con .NET 10, C#, Avalonia, MVVM,
 EF Core y SQLite. El análisis verificable del proyecto Android de referencia y el
 mapeo de reglas están en [`docs/COMALENA_ANALYSIS.md`](docs/COMALENA_ANALYSIS.md).
+El estado de cumplimiento, brechas y riesgos encontrados en la revisión están en
+[`docs/MIGRATION_COMPLIANCE.md`](docs/MIGRATION_COMPLIANCE.md).
 
 ## Ejecutar en macOS
 
-Desde la raíz del repositorio, entre primero a la carpeta independiente e instale el SDK .NET 10:
+Desde la raíz del repositorio, instale el SDK .NET 10 y ejecute:
 
 ```bash
-cd CafePOS
 dotnet restore CafePOS.slnx
 dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
 ```
@@ -34,7 +35,7 @@ dotnet publish src/CafePOS.Desktop/CafePOS.Desktop.csproj \
   -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-El workflow incluido en `CafePOS/.github/workflows/release.yml` está listo para usarse cuando esta carpeta se publique como repositorio independiente (GitHub solamente descubre workflows en la `.github` raíz del repositorio). El workflow compila y adjunta un ZIP self-contained. Un tag `v1.0.1` crea el GitHub
+El workflow incluido en `.github/workflows/release.yml` compila y adjunta un ZIP self-contained. Un tag `v1.0.1` crea el GitHub
 Release. Configure `GitHubRepository` (por ejemplo `owner/repo`) en `settings.json`
 para consultar releases. La descarga queda en el directorio persistente `updates`;
 la fase siguiente incorporará un updater externo firmado que cierre la app, valide el
