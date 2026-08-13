@@ -1,0 +1,7 @@
+using CafePOS.Application.Interfaces; using CafePOS.Domain.Entities; using Microsoft.EntityFrameworkCore; using Microsoft.Extensions.Logging;
+namespace CafePOS.Infrastructure.Persistence;
+public sealed class AppInitializer(IDataPathProvider paths,IBackupService backups,IDbContextFactory<CafePosDbContext> factory,ILogger<AppInitializer> log):IAppInitializer
+{
+ public async Task InitializeAsync(CancellationToken ct=default) { Directory.CreateDirectory(paths.DataDirectory);Directory.CreateDirectory(paths.LogDirectory); await using var db=await factory.CreateDbContextAsync(ct); var pending=(await db.Database.GetPendingMigrationsAsync(ct)).ToArray(); if(pending.Length>0) { log.LogInformation("Applying {Count} migrations",pending.Length); await backups.CreateAsync("premigration",ct); await db.Database.MigrateAsync(ct); } if(!await db.Employees.AnyAsync(ct)) { db.Employees.Add(new Employee{Id=Seed.DefaultEmployeeId,DisplayName="Cajero"}); db.Products.AddRange(Seed.Products()); await db.SaveChangesAsync(ct); } }
+}
+public static class Seed { public static readonly Guid DefaultEmployeeId=Guid.Parse("11111111-1111-1111-1111-111111111111"); public static IEnumerable<Product> Products()=>new[]{("Café americano","Café",45m),("Latte","Café",60m),("Capuccino","Café",60m),("Espresso","Café",40m),("Té","Bebidas",40m),("Croissant","Panadería",55m),("Pastel","Postres",65m),("Sandwich","Alimentos",85m)}.Select(x=>new Product{Name=x.Item1,Category=x.Item2,Price=x.Item3}); }

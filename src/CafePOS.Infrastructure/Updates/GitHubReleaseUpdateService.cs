@@ -1,0 +1,8 @@
+using System.Net.Http.Json; using System.Reflection; using System.Text.Json.Serialization; using CafePOS.Application.Interfaces;
+namespace CafePOS.Infrastructure.Updates;
+public sealed class GitHubReleaseUpdateService(HttpClient http,ISettingsService settings,IDataPathProvider paths):IUpdateService
+{
+ public async Task<UpdateInfo?> CheckAsync(CancellationToken ct=default) { var repo=settings.Current.GitHubRepository;if(string.IsNullOrWhiteSpace(repo))return null;using var request=new HttpRequestMessage(HttpMethod.Get,$"https://api.github.com/repos/{repo}/releases/latest");request.Headers.UserAgent.ParseAdd("CafePOS/1.0");var release=await (await http.SendAsync(request,ct)).Content.ReadFromJsonAsync<Release>(cancellationToken:ct);if(release is null||!Version.TryParse(release.Tag.TrimStart('v'),out var latest)||latest<=Assembly.GetEntryAssembly()?.GetName().Version)return null;var asset=release.Assets.FirstOrDefault(x=>x.Name.EndsWith("win-x64.zip",StringComparison.OrdinalIgnoreCase));return asset is null?null:new(latest,new Uri(asset.Url),asset.Name); }
+ public async Task<string> DownloadAsync(UpdateInfo update,CancellationToken ct=default) { var dir=Path.Combine(paths.DataDirectory,"updates");Directory.CreateDirectory(dir);var target=Path.Combine(dir,update.FileName);await using var input=await http.GetStreamAsync(update.DownloadUri,ct);await using var output=File.Create(target);await input.CopyToAsync(output,ct);return target; }
+ private sealed record Release([property:JsonPropertyName("tag_name")]string Tag,[property:JsonPropertyName("assets")]List<Asset> Assets); private sealed record Asset([property:JsonPropertyName("name")]string Name,[property:JsonPropertyName("browser_download_url")]string Url);
+}

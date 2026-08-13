@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk">
+ <ItemGroup><ProjectReference Include="../CafePOS.Application/CafePOS.Application.csproj" /><ProjectReference Include="../CafePOS.Domain/CafePOS.Domain.csproj" /></ItemGroup>
+ <ItemGroup>
+  <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.0" />
+  <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0"><PrivateAssets>all</PrivateAssets></PackageReference>
+  <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+  <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+ </ItemGroup>
+</Project>
