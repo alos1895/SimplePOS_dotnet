@@ -31,14 +31,23 @@ dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
 ```
 
 Los datos se guardan en `~/Library/Application Support/CafePOS`; en Windows se usa
-`C:\ProgramData\CafePOS`. La base, `backups`, `logs`, tickets y configuración nunca
+`C:\ProgramData\CafePOS`. La base, `backups`, `logs` y configuración nunca
 forman parte del paquete de aplicación. Al iniciar se crea un backup si hay migrations
 pendientes y después se llama `MigrateAsync`; no se usa `EnsureCreated`.
+La migración de reconstrucción nunca se aplica automáticamente sobre una base con
+datos: el inicio falla con una instrucción accionable. Solo para reinicios de
+desarrollo explícitos, después de verificar el respaldo, puede usarse
+`CAFEPOS_ALLOW_DESTRUCTIVE_RESET=true`.
 
-El flujo operativo del MVP requiere abrir **Caja** antes de cobrar efectivo. Agregue
-productos, opcionalmente escriba un importe parcial y cobre con efectivo o
-transferencia. El historial muestra los últimos 30 días. Ajustes permite crear un
-backup manual; se conservan los 30 más recientes.
+El flujo operativo permite crear una orden con productos de café, bebidas, comida,
+postres o extras; la existencia se descuenta de forma transaccional. Capture nombre
+y teléfono del cliente, seleccione la entrega y guarde la orden. Las entregas exigen
+teléfono normalizado y dirección, admiten repartidor, compromiso, estados y efectivo
+contra entrega. Los cobros, ajustes de cobro, reembolsos de cancelación y reversas
+manuales son registros auditables: no se eliminan. **Stock** registra entradas,
+conteos, merma y correcciones con motivo, fecha, actor y proveedor/referencia.
+**Indicadores** separa facturado, cobrado y pendiente. Las funciones administrativas
+se muestran solo al rol Administrador del alcance local actual.
 
 ## Publicación Windows
 
@@ -57,6 +66,5 @@ desde el propio proceso y, por diseño, jamás apunta al directorio de datos.
 
 ## Alcance pendiente
 
-Editor completo de catálogo, detalle/cancelación desde historial, variantes y extras,
-impresora térmica real, updater externo e interfaz de ajustes completa. La abstracción
-y el esquema permiten agregarlos sin migrar datos ya guardados.
+Updater externo e interfaz de ajustes completa.
+Impresión, impresoras y conexiones de impresora quedan fuera del alcance por decisión del proyecto.

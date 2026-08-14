@@ -29,8 +29,7 @@ diario e inserta la orden y sus renglones normalizados dentro de una transacció
 * **Caja:** `TransactionEntity` registra `INGRESO` o `GASTO`, separado de órdenes. La
   vista calcula ventas por método, ingresos/gastos manuales, categorías, delivery y
   exporta CSV. No hay una entidad durable de sesión de caja/apertura/corte.
-* **Impresión:** Bluetooth Android, servicio foreground y tickets separados para
-  cliente/cocina; incluye negocio, orden diaria, cliente, entrega y comentarios.
+* **Impresión:** existe en Android mediante Bluetooth y tickets separados, pero queda excluida de la recreación de escritorio.
 * **Métricas:** rangos de fecha, KPI, tendencias, rankings e inventario. Los usuarios
   son clientes en memoria; no existe autenticación ni empleados persistentes.
 * **Riesgos:** dinero en `Double`; JSON duplicado junto a `order_items`; actualización
@@ -53,37 +52,35 @@ diario e inserta la orden y sus renglones normalizados dentro de una transacció
 | Room + DAO | EF Core + SQLite + servicios de aplicación |
 | repositorios creados en ViewModels | DI y `IDbContextFactory` |
 | Compose / `AndroidViewModel` | Avalonia / MVVM Toolkit |
-| Bluetooth foreground service | `IReceiptPrinter` |
 | JSON de pagos | relación `Order` → `Payment` |
 | borrado lógico `isDeleted` | estado `Cancelled`, conservando auditoría |
 
 ## Qué conservar y qué no
 
 Se conservan el pago dividido, snapshots de producto, consecutivo diario, comentarios,
-historial por rango, movimientos separados de ventas y tickets sustituibles. También
+historial por rango, movimientos separados de ventas y cancelación auditable. También
 se deja el modelo preparado para variantes/modificadores, sin implementar complejidad
 de pizza que una cafetería aún no necesita.
 
 No se copian JSON como fuente de verdad, `Double`, singletons Android, repositorios
 acoplados a `Context`, migración destructiva, lógica de calendario por milisegundos,
-ni el flujo Bluetooth. Delivery, inventario de bases, clientes y métricas avanzadas
+ni impresión ni flujo Bluetooth. Delivery, inventario de bases, clientes y métricas avanzadas
 quedan explícitamente fuera del MVP, no bloqueados por el diseño.
 
 ## Arquitectura propuesta y etapas
 
 La solución usa cuatro proyectos productivos y uno de pruebas. Domain contiene reglas
 sin infraestructura; Application contiene contratos y servicios transaccionales;
-Infrastructure contiene EF, migraciones, backups, archivos, impresión y releases;
+Infrastructure contiene EF, migraciones, backups, archivos y releases;
 Desktop contiene únicamente composición DI, MVVM y Avalonia. Es suficiente separación
 para testear integridad sin introducir CQRS, bus de mensajes o repositorio genérico.
 
-1. **Fundación (incluida):** dominio, EF/SQLite, migración inicial, rutas persistentes,
-   backup/rotación, configuración, logs, DI y datos iniciales.
-2. **MVP (incluido):** catálogo, carrito, cobro efectivo/transferencia parcial,
-   historial, apertura/movimientos/cierre de caja y ticket de texto.
+1. **Fundación (incluida):** dominio, EF/SQLite, migración destructiva a cafetería,
+   rutas persistentes, backup/rotación, configuración, logs, DI y datos iniciales.
+2. **MVP (incluido):** catálogo genérico, carrito, inventario por producto, pagos
+   divididos (efectivo/transferencia/tarjeta), entregas, historial y caja.
 3. **Distribución (incluida como base):** consulta GitHub Releases, workflow win-x64
    self-contained y release por tag. La instalación desatendida queda deliberadamente
    en un proceso externo futuro: reemplazar un ejecutable en uso desde sí mismo no es
    confiable; el MVP descarga el paquete fuera del directorio de datos.
-4. **Posterior:** editor completo de productos, variantes/modificadores, impresora
-   ESC/POS/Windows, updater firmado, backup diario programado, roles y delivery.
+4. **Posterior:** updater firmado, backup diario programado, roles y variantes/modificadores.

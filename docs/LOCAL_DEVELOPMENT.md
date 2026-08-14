@@ -82,8 +82,9 @@ La primera ejecución:
 4. abre la ventana de CafePOS.
 
 Para detener la aplicación desde la terminal use `Ctrl+C` o cierre su ventana. Para
-el flujo funcional básico, primero abra **Caja**, agregue productos y después cobre
-en efectivo o por transferencia.
+el flujo funcional básico, agregue productos y guarde la orden. Después, abra
+**Historial** para capturar el desglose de pagos en efectivo, transferencia o tarjeta;
+las órdenes abiertas permiten pagos parciales y se marcan pagadas al cubrir el total.
 
 ## 6. Archivos locales y permisos
 
@@ -100,7 +101,6 @@ Dentro de ese directorio se encuentran:
 - `cafe.db`: base de datos SQLite;
 - `backups/`: respaldos automáticos y manuales;
 - `logs/`: registros de diagnóstico diarios;
-- `receipts/`: tickets de texto generados por la impresora de desarrollo;
 - `settings.json`: configuración, una vez guardada; y
 - `updates/`: paquetes de actualización descargados, cuando se habilite esa función.
 
@@ -112,7 +112,7 @@ base dentro de `bin/`, porque una compilación o actualización podría eliminar
 
 ## 7. Reiniciar solamente los datos de desarrollo
 
-> **Advertencia:** estos comandos eliminan ventas, caja, configuración, tickets y
+> **Advertencia:** estos comandos eliminan ventas, caja, configuración y
 > respaldos locales. No los use sobre una instalación con datos reales.
 
 macOS:
@@ -169,4 +169,4 @@ arriba. En Windows compruebe primero los permisos de `C:\ProgramData\CafePOS`.
 
 Cierre CafePOS y copie el directorio de datos completo a otro lugar. También se
 puede crear un respaldo desde **Ajustes**, pero copiar el directorio cerrado conserva
-la base, configuración, logs y tickets juntos.
+la base, configuración y logs juntos.

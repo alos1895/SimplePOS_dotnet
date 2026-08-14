@@ -1,5 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
- <PropertyGroup><OutputType>WinExe</OutputType><AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault><AssemblyVersion>1.0.0</AssemblyVersion></PropertyGroup>
+ <PropertyGroup><OutputType>WinExe</OutputType><AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault><Version>1.0.0</Version><AssemblyVersion>$(Version)</AssemblyVersion></PropertyGroup>
  <ItemGroup><ProjectReference Include="../CafePOS.Application/CafePOS.Application.csproj" /><ProjectReference Include="../CafePOS.Infrastructure/CafePOS.Infrastructure.csproj" /></ItemGroup>
  <ItemGroup><PackageReference Include="Avalonia.Desktop" Version="11.3.8" /><PackageReference Include="Avalonia.Controls.DataGrid" Version="11.3.8" /><PackageReference Include="Avalonia.Themes.Fluent" Version="11.3.8" /><PackageReference Include="Avalonia.Fonts.Inter" Version="11.3.8" /><PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" /><PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.0" /><PackageReference Include="Serilog.Extensions.Hosting" Version="9.0.0" /><PackageReference Include="Serilog.Sinks.File" Version="7.0.0" /><PackageReference Include="SQLitePCLRaw.lib.e_sqlite3" Version="3.53.3" /><PackageReference Include="Tmds.DBus.Protocol" Version="0.94.2" /></ItemGroup>
 </Project>

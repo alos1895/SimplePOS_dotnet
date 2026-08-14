@@ -1,1 +1,14 @@
-<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CafePOS.Desktop.App" RequestedThemeVariant="Light"><Application.Styles><FluentTheme/><StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/><Style Selector="Button.pos"><Setter Property="MinHeight" Value="62"/><Setter Property="FontSize" Value="17"/><Setter Property="Margin" Value="5"/></Style></Application.Styles></Application>
+<Application xmlns="https://github.com/avaloniaui" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="CafePOS.Desktop.App" RequestedThemeVariant="Light">
+ <Application.Styles>
+  <FluentTheme/>
+  <StyleInclude Source="avares://Avalonia.Controls.DataGrid/Themes/Fluent.xaml"/>
+  <Style Selector="Window"><Setter Property="FontFamily" Value="Segoe UI"/></Style>
+  <Style Selector="Button"><Setter Property="CornerRadius" Value="8"/><Setter Property="Padding" Value="14,9"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style Selector="Button.primary"><Setter Property="Background" Value="#2D6A4F"/><Setter Property="Foreground" Value="White"/></Style>
+  <Style Selector="Button.secondary"><Setter Property="Background" Value="#E9ECEF"/><Setter Property="Foreground" Value="#25332E"/></Style>
+  <Style Selector="Button.danger"><Setter Property="Background" Value="#B42318"/><Setter Property="Foreground" Value="White"/></Style>
+  <Style Selector="TabItem"><Setter Property="Padding" Value="18,14"/><Setter Property="FontSize" Value="15"/><Setter Property="FontWeight" Value="SemiBold"/></Style>
+  <Style Selector="TabItem:selected"><Setter Property="Foreground" Value="#2D6A4F"/></Style>
+  <Style Selector="TextBox"><Setter Property="CornerRadius" Value="7"/><Setter Property="Padding" Value="10,8"/></Style>
+ </Application.Styles>
+</Application>
