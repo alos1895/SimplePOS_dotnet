@@ -26,9 +26,37 @@ Una vez instalado el SDK, el recorrido corto desde la raíz del repositorio es:
 ```bash
 dotnet --version
 dotnet restore CafePOS.slnx
-dotnet test CafePOS.slnx
+dotnet build CafePOS.slnx --configuration Debug --no-restore
 dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
 ```
+
+Para ejecutar las pruebas:
+
+```bash
+dotnet test CafePOS.slnx --configuration Debug
+```
+
+En Windows, si el proyecto compila pero no aparece la ventana, revise el log más
+reciente en `C:\ProgramData\CafePOS\logs`. Si aparece un error de SQLite como
+`table Employees already exists`, la base local de desarrollo quedó incompatible con
+las migraciones actuales. Si no hay datos reales que conservar, puede reiniciarla y
+volver a ejecutar la app:
+
+```powershell
+Remove-Item -Recurse -Force "$env:ProgramData\CafePOS"
+dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
+```
+
+Si quiere guardar una copia antes de borrar la base local:
+
+```powershell
+Copy-Item -Recurse "$env:ProgramData\CafePOS" "$env:USERPROFILE\Desktop\CafePOS-backup"
+Remove-Item -Recurse -Force "$env:ProgramData\CafePOS"
+dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
+```
+
+Si `Remove-Item` falla por permisos, abra PowerShell como administrador y repita el
+comando.
 
 Los datos se guardan en `~/Library/Application Support/CafePOS`; en Windows se usa
 `C:\ProgramData\CafePOS`. La base, `backups`, `logs` y configuración nunca
