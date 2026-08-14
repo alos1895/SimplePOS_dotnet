@@ -58,15 +58,20 @@ dotnet publish src/CafePOS.Desktop/CafePOS.Desktop.csproj \
 ```
 
 El workflow incluido en `.github/workflows/release.yml` compila y adjunta
-`CafePOS-win-x64.zip`, autocontenido y listo para Windows de 64 bits. Para publicar
-una versión nueva, cree y envíe un tag semántico:
+`CafePOS-win-x64.zip`, autocontenido y listo para Windows de 64 bits. Cada cambio
+integrado en la rama `main` incrementa automáticamente el último número de versión,
+crea el tag y publica el Release. Por ejemplo, después de `v1.0.1`, el siguiente
+cambio integrado publicará `v1.0.2`; no hace falta crear esos tags manualmente.
+
+Para iniciar deliberadamente una versión mayor o menor (por ejemplo `v1.1.0` o
+`v2.0.0`), todavía puede crear ese tag manualmente:
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.1.0
+git push origin v1.1.0
 ```
 
-GitHub creará el Release automáticamente. En la primera instalación, el cliente
+GitHub también creará ese Release automáticamente. En la primera instalación, el cliente
 descarga el ZIP desde la sección **Releases**, lo descomprime en una carpeta con
 permisos de escritura (por ejemplo `%LOCALAPPDATA%\CafePOS`) y ejecuta
 `CafePOS.Desktop.exe`; no necesita instalar .NET.
