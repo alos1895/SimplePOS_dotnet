@@ -12,7 +12,33 @@ public partial class MainViewModel(IPosStore store,CheckoutService checkout,Cash
  [RelayCommand] private void Increment(CartLine line){if(!CanEditCart())return;line.Quantity++;TotalsChanged();} [RelayCommand] private void Decrement(CartLine line){if(!CanEditCart())return;if(--line.Quantity<=0)Cart.Remove(line);TotalsChanged();}
  [RelayCommand] private void NewOrder(){currentOrderId=null;Cart.Clear();Comments="";PaymentAmount=0;TransferReference="";TotalsChanged();StatusMessage="Nueva orden lista";}
  [RelayCommand] private async Task PayCash()=>await Pay(PaymentMethod.Cash); [RelayCommand] private async Task PayTransfer()=>await Pay(PaymentMethod.Transfer);
- private async Task Pay(PaymentMethod method){try{if(Cart.Count==0)throw new InvalidOperationException("Agregue al menos un producto.");Order order;if(currentOrderId is null){order=new Order{EmployeeId=Seed.DefaultEmployeeId,Comments=Comments,Items=Cart.Select(x=>new OrderItem{ProductId=x.Product.Id,ProductName=x.Product.Name,UnitPrice=x.Product.Price,Quantity=x.Quantity}).ToList()};order=await store.SaveOrderAsync(order);currentOrderId=order.Id;}else{order=await store.GetOrderAsync(currentOrderId.Value)??throw new InvalidOperationException("La orden pendiente ya no existe.");}var amount=PaymentAmount<=0?order.BalanceDue:PaymentAmount;order=await checkout.AddPaymentAsync(order.Id,method,amount,TransferReference);PaymentAmount=order.BalanceDue;TransferReference="";if(order.Status==OrderStatus.Paid){var number=order.DailyNumber;NewOrder();StatusMessage=$"Orden #{number} cobrada";}else StatusMessage=$"Pago parcial guardado. Resta {order.BalanceDue:C}. Complete el cobro o inicie otra orden.";await RefreshHistory();CurrentSession=await store.GetOpenCashSessionAsync();OnPropertyChanged(nameof(ExpectedCash));}catch(Exception ex){StatusMessage=ex.Message;}}
+ private async Task Pay(PaymentMethod method)
+ {
+  try
+  {
+   if (Cart.Count == 0) throw new InvalidOperationException("Agregue al menos un producto.");
+   var amountToPay = PaymentAmount <= 0 ? Total : PaymentAmount;
+   Order resultOrder;
+   if (currentOrderId is null)
+   {
+    var newOrder = new Order { EmployeeId = Seed.DefaultEmployeeId, Comments = Comments, Items = Cart.Select(x => new OrderItem { ProductId = x.Product.Id, ProductName = x.Product.Name, UnitPrice = x.Product.Price, Quantity = x.Quantity }).ToList() };
+    resultOrder = await checkout.CreateOrderAndPayAsync(newOrder, method, amountToPay, TransferReference);
+    currentOrderId = resultOrder.Id;
+   }
+   else
+   {
+    resultOrder = await checkout.AddPaymentAsync(currentOrderId.Value, method, amountToPay, TransferReference);
+   }
+   PaymentAmount = resultOrder.BalanceDue;
+   TransferReference = "";
+   if (resultOrder.Status == OrderStatus.Paid) { var number = resultOrder.DailyNumber; NewOrder(); StatusMessage = $"Orden #{number} cobrada."; }
+   else { StatusMessage = $"Pago parcial guardado. Resta {resultOrder.BalanceDue:C}."; }
+   await RefreshHistory();
+   CurrentSession = await store.GetOpenCashSessionAsync();
+   OnPropertyChanged(nameof(ExpectedCash));
+  }
+  catch (Exception ex) { StatusMessage = ex.Message; }
+ }
  [RelayCommand] private async Task RefreshHistory(){History.Clear();var now=DateTimeOffset.Now;foreach(var o in await store.GetOrdersAsync(now.Date.AddDays(-30),now.Date.AddDays(1),null))History.Add(o);}
  [RelayCommand] private async Task OpenCash(){try{CurrentSession=await cash.OpenAsync(Seed.DefaultEmployeeId,1,OpeningAmount);StatusMessage="Caja abierta";OnPropertyChanged(nameof(ExpectedCash));}catch(Exception ex){StatusMessage=ex.Message;}}
  [RelayCommand] private async Task AddIncome()=>await Movement(CashMovementType.ManualIncome); [RelayCommand] private async Task AddExpense()=>await Movement(CashMovementType.ManualExpense);
