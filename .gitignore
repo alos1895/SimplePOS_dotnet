@@ -1,0 +1,116 @@
+# Archivos de datos y de ejecución de CafePOS
+# Estos archivos NUNCA deben estar en el repositorio. La aplicación los guarda
+# fuera del directorio del proyecto por diseño. Se agregan aquí como una
+# protección adicional contra una configuración de desarrollo incorrecta.
+cafe.db
+cafe.db-shm
+cafe.db-wal
+settings.json
+backups/
+logs/
+receipts/
+updates/
+
+# Directorio de publicación local
+artifacts/
+
+## Plantilla estándar de VisualStudio de https://github.com/github/gitignore
+
+# Archivos específicos de usuario
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Archivos específicos de usuario (MonoDevelop/Xamarin Studio)
+*.userprefs
+
+# Archivos autogenerados por Mono
+mono_crash.*
+
+# Resultados de compilación
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Directorio de caché/opciones de Visual Studio
+.vs/
+
+# Archivos autogenerados por Visual Studio 2017
+Generated\ Files/
+
+# Resultados de pruebas de MSTest
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+
+# NUnit
+*.nunit
+TestResult.xml
+
+# Archivos de compilación de .NET
+project.lock.json
+project.assets.json
+
+# Archivos de cobertura de código
+*.coverage
+*.coveragexml
+
+# Archivos de ReSharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+# Archivos de JetBrains Rider
+.idea/
+
+# Archivos de Visual Studio Code
+.vscode/
+
+# Archivos de registro
+[Ll]ogs/
+[Ll]og/
+
+# Archivos de publicación de base de datos
+*.dacpac
+
+# Paquetes NuGet
+*.nupkg
+# La carpeta de paquetes NuGet debe ser ignorada. Sin embargo, si se utiliza
+# la restauración de paquetes de NuGet, entonces esta carpeta no existirá,
+# por lo que no es necesario ignorarla.
+# packages/
+
+# El directorio global de paquetes de NuGet de .NET Core
+# ~/.nuget/packages
+
+# Archivos de caché de .NET Core
+*.dotnet.diagnostic.json.bin
+
+# Archivos de caché de .NET Core (macOS)
+.DS_Store
+
+# Archivos de caché de Windows
+Thumbs.db
+ehthumbs.db
+
+# Archivos de caché de compilación de Avalonia
+App.xaml.g.cs
+*.xaml.g.cs
+
+# Archivos de compilación generados por el MVVM Toolkit
+*.g.cs
+*.g.i.cs
+
+# Ignorar archivos de configuración local que puedan sobreescribir los valores predeterminados
+appsettings.Development.json
+secrets.json
