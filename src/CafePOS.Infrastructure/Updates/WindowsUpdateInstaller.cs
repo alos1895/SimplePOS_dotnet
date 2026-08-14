@@ -32,7 +32,7 @@ public sealed class WindowsUpdateInstaller : IUpdateInstaller
         var scriptPath = Path.Combine(Path.GetTempPath(), $"CafePOS-update-{Guid.NewGuid():N}.ps1");
         File.WriteAllText(scriptPath, BuildUpdaterScript(Environment.ProcessId, stagingDirectory, installDirectory, executablePath));
 
-        Process.Start(new ProcessStartInfo
+        _ = Process.Start(new ProcessStartInfo
         {
             FileName = "powershell.exe",
             Arguments = $"-NoProfile -NonInteractive -ExecutionPolicy Bypass -File {Quote(scriptPath)}",
