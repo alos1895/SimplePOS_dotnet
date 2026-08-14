@@ -57,14 +57,27 @@ dotnet publish src/CafePOS.Desktop/CafePOS.Desktop.csproj \
   -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true
 ```
 
-El workflow incluido en `.github/workflows/release.yml` compila y adjunta un ZIP self-contained. Un tag `v1.0.1` crea el GitHub
-Release. Configure `GitHubRepository` (por ejemplo `owner/repo`) en `settings.json`
-para consultar releases. La descarga queda en el directorio persistente `updates`;
-la fase siguiente incorporará un updater externo firmado que cierre la app, valide el
-paquete, reemplace únicamente binarios y reinicie. Esto evita un reemplazo inseguro
-desde el propio proceso y, por diseño, jamás apunta al directorio de datos.
+El workflow incluido en `.github/workflows/release.yml` compila y adjunta
+`CafePOS-win-x64.zip`, autocontenido y listo para Windows de 64 bits. Para publicar
+una versión nueva, cree y envíe un tag semántico:
+
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
+
+GitHub creará el Release automáticamente. En la primera instalación, el cliente
+descarga el ZIP desde la sección **Releases**, lo descomprime en una carpeta con
+permisos de escritura (por ejemplo `%LOCALAPPDATA%\CafePOS`) y ejecuta
+`CafePOS.Desktop.exe`; no necesita instalar .NET.
+
+La aplicación consulta el último Release del repositorio configurado en
+`GitHubRepository` (por defecto `alos1895/SimplePOS_dotnet`). Cuando hay una versión
+superior muestra **Actualizar ahora**: descarga el ZIP, cierra CafePOS, reemplaza sus
+binarios mediante un proceso externo y vuelve a abrirlo. La base de datos y los
+respaldos están fuera de la carpeta de instalación, por lo que no se reemplazan.
 
 ## Alcance pendiente
 
-Updater externo e interfaz de ajustes completa.
+Firma de código del ejecutable y del instalador, e interfaz de ajustes completa.
 Impresión, impresoras y conexiones de impresora quedan fuera del alcance por decisión del proyecto.
