@@ -8,12 +8,25 @@ mapeo de reglas están en [`docs/COMALENA_ANALYSIS.md`](docs/COMALENA_ANALYSIS.m
 El estado de cumplimiento, brechas y riesgos encontrados en la revisión están en
 [`docs/MIGRATION_COMPLIANCE.md`](docs/MIGRATION_COMPLIANCE.md).
 
-## Ejecutar en macOS
+## Desarrollo local
 
-Desde la raíz del repositorio, instale el SDK .NET 10 y ejecute:
+Para desarrollar y ejecutar CafePOS se necesita el **SDK de .NET 10** (no solamente
+el runtime). No hacen falta Android Studio, Java, un emulador, Docker ni un servidor
+de base de datos: Avalonia crea la aplicación de escritorio y SQLite se ejecuta de
+forma local.
+
+La guía paso a paso incluye instalación y verificación para ambas plataformas,
+comandos de PowerShell y Terminal, ubicación de datos, solución de problemas y
+publicación local:
+
+**[Configurar el entorno local en macOS y Windows](docs/LOCAL_DEVELOPMENT.md)**
+
+Una vez instalado el SDK, el recorrido corto desde la raíz del repositorio es:
 
 ```bash
+dotnet --version
 dotnet restore CafePOS.slnx
+dotnet test CafePOS.slnx
 dotnet run --project src/CafePOS.Desktop/CafePOS.Desktop.csproj
 ```
 
@@ -27,7 +40,7 @@ productos, opcionalmente escriba un importe parcial y cobre con efectivo o
 transferencia. El historial muestra los últimos 30 días. Ajustes permite crear un
 backup manual; se conservan los 30 más recientes.
 
-## Pruebas y publicación Windows
+## Publicación Windows
 
 ```bash
 dotnet test CafePOS.slnx
