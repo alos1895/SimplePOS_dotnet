@@ -69,9 +69,9 @@ desarrollo explícitos, después de verificar el respaldo, puede usarse
 
 El flujo operativo permite crear una orden con productos de café, bebidas, comida,
 postres o extras; la existencia se descuenta de forma transaccional. Capture nombre
-y teléfono del cliente, seleccione la entrega y guarde la orden. Las entregas exigen
-teléfono normalizado y dirección, admiten repartidor, compromiso, estados y efectivo
-contra entrega. Los cobros, ajustes de cobro, reembolsos de cancelación y reversas
+y teléfono del cliente, seleccione la opción de entrega y guarde la orden. Las entregas
+exigen teléfono normalizado y dirección, y admiten efectivo contra entrega. Los cobros,
+ajustes de cobro, reembolsos de cancelación y reversas
 manuales son registros auditables: no se eliminan. **Stock** registra entradas,
 conteos, merma y correcciones con motivo, fecha, actor y proveedor/referencia.
 **Indicadores** separa facturado, cobrado y pendiente. Las funciones administrativas
