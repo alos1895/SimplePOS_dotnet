@@ -197,7 +197,90 @@ public sealed class OperationalHardeningTests
 
             await using var db = new CafePosDbContext(options);
             Assert.True(await db.Employees.AnyAsync());
-            Assert.True(await db.Products.AnyAsync());
+            var menu = await db.Products.Where(x => x.IsActive).ToListAsync();
+            Assert.Equal(38, menu.Count);
+            Assert.Contains(menu, x => x.Name == "Panini de jamón con queso manchego + bebida" && x.Price == 149m);
+            Assert.Contains(menu, x => x.Name == "Panini de pollo con queso manchego + bebida" && x.Price == 159m);
+            Assert.Contains(menu, x => x.Name == "Latte + muffin" && x.Price == 99m);
+            Assert.Equal(6, menu.Count(x => x.Name.EndsWith("+ bebida") && x.Name.StartsWith("Croissant")));
+            Assert.Equal(6, menu.Count(x => x.Price == 69m));
+            Assert.Contains(menu, x => x.Name == "Café americano" && x.Price == 55m && x.Category == ProductCategory.Coffee);
+            Assert.Contains(menu, x => x.Name == "Café latte a las rocas" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.Contains(menu, x => x.Name == "Frapuchino" && x.Price == 78m);
+            Assert.Contains(menu, x => x.Name == "Botella de agua 500 ml" && x.Price == 16m);
+            Assert.Equal(11, menu.Count(x => x.Category == ProductCategory.Combos));
+            Assert.All(menu.Where(x => x.Name.Contains("+ bebida") || x.Name.Contains("+ muffin")),
+                product => Assert.Equal(ProductCategory.Combos, product.Category));
+        }
+        finally { Delete(path); }
+    }
+
+    [Fact]
+    public async Task Initializer_replaces_the_old_six_item_development_catalog()
+    {
+        var path = NewPath();
+        try
+        {
+            var options = new DbContextOptionsBuilder<CafePosDbContext>()
+                .UseSqlite($"Data Source={path};Pooling=False").Options;
+            await using (var db = new CafePosDbContext(options))
+            {
+                await db.Database.MigrateAsync();
+                db.Products.AddRange(
+                    new Product { Name = "Espresso", Category = ProductCategory.Coffee, Price = 35m, StockQuantity = 30 },
+                    new Product { Name = "Latte", Category = ProductCategory.Coffee, Price = 55m, StockQuantity = 30 },
+                    new Product { Name = "Té helado", Category = ProductCategory.Beverages, Price = 35m, StockQuantity = 24 },
+                    new Product { Name = "Sándwich del día", Category = ProductCategory.Food, Price = 85m, StockQuantity = 12 },
+                    new Product { Name = "Panqué", Category = ProductCategory.Desserts, Price = 45m, StockQuantity = 16 },
+                    new Product { Name = "Shot extra", Category = ProductCategory.Extras, Price = 15m, StockQuantity = 40 });
+                await db.SaveChangesAsync();
+            }
+
+            var initializer = new AppInitializer(
+                new TestPaths(path), new NoBackup(), new TestFactory(options), NullLogger<AppInitializer>.Instance);
+            await initializer.InitializeAsync();
+
+            await using var verification = new CafePosDbContext(options);
+            Assert.Equal(38, await verification.Products.CountAsync(x => x.IsActive));
+            Assert.False((await verification.Products.SingleAsync(x => x.Name == "Espresso")).IsActive);
+            Assert.True(await verification.Products.AnyAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
+        }
+        finally { Delete(path); }
+    }
+
+    [Fact]
+    public async Task Initializer_moves_existing_food_and_drink_products_into_combos()
+    {
+        var path = NewPath();
+        try
+        {
+            var options = new DbContextOptionsBuilder<CafePosDbContext>()
+                .UseSqlite($"Data Source={path};Pooling=False").Options;
+            await using (var db = new CafePosDbContext(options))
+            {
+                await db.Database.MigrateAsync();
+                db.Products.Add(new Product
+                {
+                    Name = Seed.CatalogMarker,
+                    Category = ProductCategory.Food,
+                    Price = 149m,
+                    StockQuantity = 30
+                });
+                await db.SaveChangesAsync();
+            }
+
+            var initializer = new AppInitializer(
+                new TestPaths(path), new NoBackup(), new TestFactory(options), NullLogger<AppInitializer>.Instance);
+            await initializer.InitializeAsync();
+
+            await using var verification = new CafePosDbContext(options);
+            Assert.False((await verification.Products.SingleAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Food)).IsActive);
+            Assert.True(await verification.Products.AnyAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
+            Assert.Equal(11, await verification.Products.CountAsync(x =>
+                x.Category == ProductCategory.Combos && x.IsActive));
         }
         finally { Delete(path); }
     }

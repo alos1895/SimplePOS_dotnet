@@ -22,10 +22,11 @@
       <Grid RowDefinitions="Auto,Auto,*">
        <Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="Catálogo" FontSize="20" FontWeight="Bold"/><TextBlock Text="Los productos sin existencias no se muestran." Foreground="#667085"/></StackPanel><TextBlock Grid.Column="1" Text="{Binding Products.Count, StringFormat='{}{0} productos'}" VerticalAlignment="Center" Foreground="#2D6A4F"/></Grid>
        <WrapPanel Grid.Row="1" Margin="0,18,0,6">
-        <Button Classes="secondary" Content="Café" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Coffee}"/>
-        <Button Classes="secondary" Content="Bebidas" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Beverages}"/>
+        <Button Classes="secondary" Content="Bebidas Frías" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.ColdBeverages}"/>
+        <Button Classes="secondary" Content="Bebidas Calientes" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.HotBeverages}"/>
         <Button Classes="secondary" Content="Comida" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Food}"/>
         <Button Classes="secondary" Content="Postres" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Desserts}"/>
+        <Button Classes="secondary" Content="Combos" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Combos}"/>
         <Button Classes="secondary" Content="Extras" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Extras}"/>
         <Button Classes="secondary" Content="Notas" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Notes}"/>
        </WrapPanel>

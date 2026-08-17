@@ -24,20 +24,48 @@ public sealed class AppInitializer(
             await db.Database.MigrateAsync(ct);
         }
 
-        if (!await db.Employees.AnyAsync(ct))
+        if (!await db.Employees.AnyAsync(employee => employee.Id == Seed.DefaultEmployeeId, ct))
             db.Employees.Add(new Employee { Id = Seed.DefaultEmployeeId, DisplayName = "Administrador", Role = EmployeeRole.Admin });
-        if (!await db.Products.AnyAsync(ct))
+        var catalogInstalled = await db.Products.AnyAsync(
+            product => product.Name == Seed.CatalogMarker &&
+                       product.Category == ProductCategory.Combos &&
+                       product.IsActive, ct);
+        if (!catalogInstalled)
         {
-            var products = Seed.Products().ToArray();
-            db.Products.AddRange(products);
-            db.InventoryMovements.AddRange(products.Select(product => new InventoryMovement
+            var existingProducts = await db.Products.ToListAsync(ct);
+            foreach (var product in existingProducts)
+                product.IsActive = false;
+
+            foreach (var seededProduct in Seed.Products())
             {
-                Product = product,
-                EmployeeId = Seed.DefaultEmployeeId,
-                Type = InventoryMovementType.Incoming,
-                QuantityDelta = product.StockQuantity,
-                Reason = "Inventario inicial"
-            }));
+                var product = existingProducts.FirstOrDefault(existing =>
+                    existing.Category == seededProduct.Category && existing.Name == seededProduct.Name);
+                var previousStock = product?.StockQuantity ?? 0;
+                if (product is null)
+                {
+                    product = seededProduct;
+                    db.Products.Add(product);
+                }
+                else
+                {
+                    product.Price = seededProduct.Price;
+                    product.StockQuantity = seededProduct.StockQuantity;
+                    product.LowStockThreshold = seededProduct.LowStockThreshold;
+                    product.IsActive = true;
+                    product.UpdatedAt = DateTime.UtcNow;
+                }
+
+                var quantityDelta = product.StockQuantity - previousStock;
+                if (quantityDelta != 0)
+                    db.InventoryMovements.Add(new InventoryMovement
+                    {
+                        Product = product,
+                        EmployeeId = Seed.DefaultEmployeeId,
+                        Type = previousStock == 0 ? InventoryMovementType.Incoming : InventoryMovementType.Correction,
+                        QuantityDelta = quantityDelta,
+                        Reason = "Instalación del menú Gloria"
+                    });
+            }
         }
         if (!await db.DeliveryOptions.AnyAsync(ct))
             db.DeliveryOptions.AddRange(Seed.DeliveryOptions());
@@ -49,15 +77,48 @@ public sealed class AppInitializer(
 public static class Seed
 {
     public static readonly Guid DefaultEmployeeId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public const string CatalogMarker = "Panini de jamón con queso manchego + bebida";
 
     public static IEnumerable<Product> Products() =>
     [
-        new() { Name = "Espresso", Category = ProductCategory.Coffee, Price = 35m, StockQuantity = 30 },
-        new() { Name = "Latte", Category = ProductCategory.Coffee, Price = 55m, StockQuantity = 30 },
-        new() { Name = "Té helado", Category = ProductCategory.Beverages, Price = 35m, StockQuantity = 24 },
-        new() { Name = "Sándwich del día", Category = ProductCategory.Food, Price = 85m, StockQuantity = 12 },
-        new() { Name = "Panqué", Category = ProductCategory.Desserts, Price = 45m, StockQuantity = 16 },
-        new() { Name = "Shot extra", Category = ProductCategory.Extras, Price = 15m, StockQuantity = 40 }
+        new() { Name = "Latte + muffin", Category = ProductCategory.Combos, Price = 99m, StockQuantity = 30 },
+        new() { Name = "Capuchino + muffin", Category = ProductCategory.Combos, Price = 99m, StockQuantity = 30 },
+        new() { Name = "Chocolate caliente + muffin", Category = ProductCategory.Combos, Price = 99m, StockQuantity = 30 },
+        new() { Name = "Café latte", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Capuchino", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Café mocha", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Café americano", Category = ProductCategory.Coffee, Price = 55m, StockQuantity = 30 },
+        new() { Name = "Café de olla", Category = ProductCategory.Coffee, Price = 55m, StockQuantity = 30 },
+        new() { Name = "Tisana caliente", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Chocolate caliente", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Taro caliente", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Matcha caliente", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Chai caliente", Category = ProductCategory.Coffee, Price = 65m, StockQuantity = 30 },
+        new() { Name = "Bebida caliente de temporada", Category = ProductCategory.Coffee, Price = 70m, StockQuantity = 30 },
+        new() { Name = "Café latte a las rocas", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Tisana helada", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Chocolate helado", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Taro helado", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Matcha helado", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Chai helado", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Cold brew", Category = ProductCategory.Beverages, Price = 75m, StockQuantity = 30 },
+        new() { Name = "Frapuchino", Category = ProductCategory.Beverages, Price = 78m, StockQuantity = 30 },
+        new() { Name = "Botella de agua 500 ml", Category = ProductCategory.Beverages, Price = 16m, StockQuantity = 30 },
+        new() { Name = "Bebida helada de temporada", Category = ProductCategory.Beverages, Price = 78m, StockQuantity = 30 },
+        new() { Name = "Panini de jamón con queso manchego + bebida", Category = ProductCategory.Combos, Price = 149m, StockQuantity = 30 },
+        new() { Name = "Panini de pollo con queso manchego + bebida", Category = ProductCategory.Combos, Price = 159m, StockQuantity = 30 },
+        new() { Name = "Croissant clásico", Category = ProductCategory.Food, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant clásico + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 },
+        new() { Name = "Croissant italiano", Category = ProductCategory.Food, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant italiano + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 },
+        new() { Name = "Croissant saludable", Category = ProductCategory.Food, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant saludable + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 },
+        new() { Name = "Croissant de fresa", Category = ProductCategory.Desserts, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant de fresa + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 },
+        new() { Name = "Croissant de manzana y canela", Category = ProductCategory.Desserts, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant de manzana y canela + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 },
+        new() { Name = "Croissant cajetoso", Category = ProductCategory.Desserts, Price = 69m, StockQuantity = 30 },
+        new() { Name = "Croissant cajetoso + bebida", Category = ProductCategory.Combos, Price = 119m, StockQuantity = 30 }
     ];
 
     public static IEnumerable<DeliveryOption> DeliveryOptions() =>
