@@ -56,8 +56,6 @@ public partial class MainViewModel(
         new(InventoryMovementType.Waste, "Merma"),
         new(InventoryMovementType.Correction, "Corrección")
     ];
-    public IReadOnlyList<NamedOption<DeliveryStatus>> DeliveryStatuses { get; } =
-        Enum.GetValues<DeliveryStatus>().Select(x => new NamedOption<DeliveryStatus>(x, x.ToString())).ToList();
     public IReadOnlyList<NamedOption<ManualTransactionType>> ManualTransactionTypes { get; } =
     [
         new(ManualTransactionType.Income, "INGRESO"),
@@ -83,10 +81,6 @@ public partial class MainViewModel(
     [ObservableProperty] private decimal paymentAmount;
     [ObservableProperty] private string paymentReference = "";
     [ObservableProperty] private string paymentAdjustmentReason = "";
-    [ObservableProperty] private NamedOption<DeliveryStatus>? selectedDeliveryStatus;
-    [ObservableProperty] private string selectedRiderName = "";
-    [ObservableProperty] private string selectedPromisedAtText = "";
-    [ObservableProperty] private bool selectedCashOnDelivery;
 
     [ObservableProperty] private string manualTransactionConcept = "";
     [ObservableProperty] private decimal manualTransactionAmount;
@@ -132,7 +126,6 @@ public partial class MainViewModel(
     public string CurrentUserRole => $"{currentUser.Current.DisplayName} · {currentUser.Current.Role}";
     public bool CanEditSelectedOrder => SelectedHistoryOrder?.Status == OrderStatus.Open;
     public bool CanCancelSelectedOrder => SelectedHistoryOrder is { Status: not OrderStatus.Cancelled };
-    public bool CanUpdateSelectedDelivery => SelectedHistoryOrder is { Status: not OrderStatus.Cancelled, DeliveryType: not DeliveryType.Pickup };
     public bool HasManualTransactions => ManualTransactions.Count > 0;
     public bool IsManualTransactionHistoryEmpty => !HasManualTransactions;
     public bool HasAvailableUpdate => AvailableUpdate is not null;
@@ -278,32 +271,6 @@ public partial class MainViewModel(
             await LoadHistoryAsync(cancelled.Id);
             await RefreshCashReport();
             StatusMessage = $"Orden #{cancelled.DailyNumber} cancelada, inventario devuelto y cobros reembolsados.";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
-
-    [RelayCommand]
-    private async Task UpdateSelectedDelivery()
-    {
-        try
-        {
-            if (SelectedHistoryOrder is null || SelectedDeliveryStatus is null)
-                throw new InvalidOperationException("Seleccione una orden y estado de entrega.");
-            DateTime? promisedAt = null;
-            if (!string.IsNullOrWhiteSpace(SelectedPromisedAtText))
-            {
-                if (!DateTime.TryParseExact(SelectedPromisedAtText.Trim(), "yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture,
-                        DateTimeStyles.AssumeLocal, out var parsed))
-                    throw new InvalidOperationException("Use fecha prometida yyyy-MM-dd HH:mm.");
-                promisedAt = parsed.ToUniversalTime();
-            }
-            var saved = await checkout.UpdateDeliveryAsync(
-                SelectedHistoryOrder.Id, SelectedDeliveryStatus.Value, SelectedRiderName, promisedAt, SelectedCashOnDelivery);
-            await LoadHistoryAsync(saved.Id);
-            StatusMessage = $"Entrega de orden #{saved.DailyNumber} actualizada.";
         }
         catch (Exception ex)
         {
@@ -720,10 +687,6 @@ public partial class MainViewModel(
             foreach (var item in value.Items) SelectedOrderItems.Add(item);
             foreach (var payment in value.CurrentCollections) PaymentBreakdown.Add(payment);
             foreach (var payment in value.Payments.OrderBy(x => x.CreatedAt)) PaymentAudit.Add(payment);
-            SelectedDeliveryStatus = DeliveryStatuses.Single(x => x.Value == value.DeliveryStatus);
-            SelectedRiderName = value.RiderName;
-            SelectedPromisedAtText = value.PromisedAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm", CultureInfo.InvariantCulture) ?? "";
-            SelectedCashOnDelivery = value.CashOnDelivery;
         }
         ClearPaymentEditor();
         OnPropertyChanged(nameof(SelectedOrderTitle));
@@ -731,7 +694,6 @@ public partial class MainViewModel(
         OnPropertyChanged(nameof(SelectedPaymentBalance));
         OnPropertyChanged(nameof(CanEditSelectedOrder));
         OnPropertyChanged(nameof(CanCancelSelectedOrder));
-        OnPropertyChanged(nameof(CanUpdateSelectedDelivery));
     }
 
     partial void OnSelectedPaymentChanged(Payment? value)

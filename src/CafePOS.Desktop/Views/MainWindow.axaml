@@ -66,28 +66,6 @@
      <Border Grid.Column="1" Background="White" CornerRadius="14" Padding="20"><StackPanel><TextBlock Text="Auditoría de pagos" FontSize="20" FontWeight="Bold"/><ItemsControl ItemsSource="{Binding PaymentAudit}"><ItemsControl.ItemTemplate><DataTemplate><StackPanel Margin="0,5"><TextBlock Text="{Binding Kind}" FontWeight="Bold"/><TextBlock Text="{Binding Amount, StringFormat='MXN {0:N2}'}"/><TextBlock Text="{Binding Reason}" Foreground="#667085"/></StackPanel></DataTemplate></ItemsControl.ItemTemplate></ItemsControl></StackPanel></Border>
     </Grid>
    </TabItem>
-   <TabItem Header="Entregas">
-    <Grid Margin="4" ColumnDefinitions="3*,2*" ColumnSpacing="18">
-     <StackPanel>
-      <TextBlock Text="Seguimiento de entregas" FontSize="28" FontWeight="Bold"/>
-      <TextBlock Text="Seleccione una orden de entrega desde Historial y actualice aquí el estado, repartidor y compromiso." Foreground="#667085" Margin="0,0,0,14"/>
-      <ListBox ItemsSource="{Binding History}" SelectedItem="{Binding SelectedHistoryOrder}" BorderThickness="0">
-       <ListBox.ItemTemplate><DataTemplate><Border Background="White" CornerRadius="10" Padding="12" Margin="0,0,0,8"><StackPanel><TextBlock Text="{Binding DailyNumber, StringFormat='Orden #{0}'}" FontWeight="Bold"/><TextBlock Text="{Binding CustomerName}"/><TextBlock Text="{Binding DeliveryAddress}" TextWrapping="Wrap"/><TextBlock Text="{Binding DeliveryStatus}" Foreground="#4F659D"/></StackPanel></Border></DataTemplate></ListBox.ItemTemplate>
-      </ListBox>
-     </StackPanel>
-     <Border Grid.Column="1" Background="White" CornerRadius="14" Padding="20">
-      <StackPanel Spacing="10">
-       <TextBlock Text="{Binding SelectedOrderTitle}" FontSize="20" FontWeight="Bold"/>
-       <TextBlock Text="{Binding SelectedHistoryOrder.CustomerPhone}"/>
-       <ComboBox ItemsSource="{Binding DeliveryStatuses}" SelectedItem="{Binding SelectedDeliveryStatus}" DisplayMemberBinding="{Binding Name}" IsEnabled="{Binding CanUpdateSelectedDelivery}"/>
-       <TextBox Watermark="Repartidor" Text="{Binding SelectedRiderName}" IsEnabled="{Binding CanUpdateSelectedDelivery}"/>
-       <TextBox Watermark="Prometida yyyy-MM-dd HH:mm" Text="{Binding SelectedPromisedAtText}" IsEnabled="{Binding CanUpdateSelectedDelivery}"/>
-       <CheckBox Content="Efectivo contra entrega" IsChecked="{Binding SelectedCashOnDelivery}" IsEnabled="{Binding CanUpdateSelectedDelivery}"/>
-       <Button Classes="primary" Content="Guardar seguimiento" Command="{Binding UpdateSelectedDeliveryCommand}" IsEnabled="{Binding CanUpdateSelectedDelivery}"/>
-      </StackPanel>
-     </Border>
-    </Grid>
-   </TabItem>
    <TabItem Header="Movimientos">
     <Grid Margin="4" ColumnDefinitions="*,*" ColumnSpacing="18"><Border Background="White" CornerRadius="14" Padding="24"><StackPanel Spacing="14"><TextBlock Text="Nueva transacción manual" FontSize="20" FontWeight="Bold"/><TextBox Watermark="Concepto" Text="{Binding ManualTransactionConcept}"/><TextBox Watermark="Monto" Text="{Binding ManualTransactionAmount}"/><ComboBox ItemsSource="{Binding ManualTransactionTypes}" SelectedItem="{Binding SelectedManualTransactionType}" DisplayMemberBinding="{Binding Name}"/><Button Classes="primary" Content="Guardar transacción" Command="{Binding SaveManualTransactionCommand}" HorizontalAlignment="Right"/></StackPanel></Border>
      <Border Grid.Column="1" Background="White" CornerRadius="14" Padding="24"><Grid RowDefinitions="Auto,*"><TextBlock Text="Historial de transacciones" FontSize="28" FontWeight="Bold"/><ListBox Grid.Row="1" ItemsSource="{Binding ManualTransactions}" BorderThickness="0" Margin="0,16,0,0"><ListBox.ItemTemplate><DataTemplate><Border BorderBrush="#E5E7EB" BorderThickness="0,0,0,1" Padding="0,10"><Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="{Binding Concept}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="{Binding Type}" Foreground="#667085"/><TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd/MM/yyyy HH:mm}'}" FontSize="12" Foreground="#667085"/></StackPanel><StackPanel Grid.Column="1"><TextBlock Text="{Binding Amount, StringFormat='MXN {0:N2}'}" FontWeight="Bold"/><Button Classes="danger" Content="Eliminar" Command="{Binding $parent[Window].DataContext.DeleteManualTransactionCommand}" CommandParameter="{Binding}" Padding="8,3"/></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox></Grid></Border>
