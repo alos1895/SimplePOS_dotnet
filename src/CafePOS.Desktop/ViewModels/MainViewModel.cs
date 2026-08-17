@@ -70,7 +70,7 @@ public partial class MainViewModel(
     [ObservableProperty] private string deliveryAddress = "";
     [ObservableProperty] private bool cashOnDelivery;
     [ObservableProperty] private DeliveryOptionItem? selectedDeliveryOption;
-    [ObservableProperty] private CatalogSection selectedCatalogSection = CatalogSection.Coffee;
+    [ObservableProperty] private CatalogSection selectedCatalogSection = CatalogSection.ColdBeverages;
     [ObservableProperty] private string statusMessage = "Listo";
 
     [ObservableProperty] private string historySearch = "";
@@ -762,7 +762,14 @@ public partial class MainViewModel(
     {
         Products.Clear();
         if (SelectedCatalogSection == CatalogSection.Notes) return;
-        var category = (ProductCategory)SelectedCatalogSection;
+        var category = SelectedCatalogSection switch
+        {
+            CatalogSection.ColdBeverages => ProductCategory.Beverages,
+            CatalogSection.HotBeverages => ProductCategory.Coffee,
+            CatalogSection.Food => ProductCategory.Food,
+            CatalogSection.Desserts => ProductCategory.Desserts,
+            _ => ProductCategory.Extras
+        };
         foreach (var item in allCatalogItems.Where(x => x.Category == category))
             Products.Add(item);
     }
@@ -903,8 +910,8 @@ public partial class MainViewModel(
 
     private static string CategoryLabel(ProductCategory category) => category switch
     {
-        ProductCategory.Coffee => "Café",
-        ProductCategory.Beverages => "Bebidas",
+        ProductCategory.Coffee => "Bebidas Calientes",
+        ProductCategory.Beverages => "Bebidas Frías",
         ProductCategory.Food => "Comida",
         ProductCategory.Desserts => "Postres",
         _ => "Extras"
