@@ -24,20 +24,46 @@ public sealed class AppInitializer(
             await db.Database.MigrateAsync(ct);
         }
 
-        if (!await db.Employees.AnyAsync(ct))
+        if (!await db.Employees.AnyAsync(employee => employee.Id == Seed.DefaultEmployeeId, ct))
             db.Employees.Add(new Employee { Id = Seed.DefaultEmployeeId, DisplayName = "Administrador", Role = EmployeeRole.Admin });
-        if (!await db.Products.AnyAsync(ct))
+        var catalogInstalled = await db.Products.AnyAsync(
+            product => product.Name == Seed.CatalogMarker && product.IsActive, ct);
+        if (!catalogInstalled)
         {
-            var products = Seed.Products().ToArray();
-            db.Products.AddRange(products);
-            db.InventoryMovements.AddRange(products.Select(product => new InventoryMovement
+            var existingProducts = await db.Products.ToListAsync(ct);
+            foreach (var product in existingProducts)
+                product.IsActive = false;
+
+            foreach (var seededProduct in Seed.Products())
             {
-                Product = product,
-                EmployeeId = Seed.DefaultEmployeeId,
-                Type = InventoryMovementType.Incoming,
-                QuantityDelta = product.StockQuantity,
-                Reason = "Inventario inicial"
-            }));
+                var product = existingProducts.FirstOrDefault(existing =>
+                    existing.Category == seededProduct.Category && existing.Name == seededProduct.Name);
+                var previousStock = product?.StockQuantity ?? 0;
+                if (product is null)
+                {
+                    product = seededProduct;
+                    db.Products.Add(product);
+                }
+                else
+                {
+                    product.Price = seededProduct.Price;
+                    product.StockQuantity = seededProduct.StockQuantity;
+                    product.LowStockThreshold = seededProduct.LowStockThreshold;
+                    product.IsActive = true;
+                    product.UpdatedAt = DateTime.UtcNow;
+                }
+
+                var quantityDelta = product.StockQuantity - previousStock;
+                if (quantityDelta != 0)
+                    db.InventoryMovements.Add(new InventoryMovement
+                    {
+                        Product = product,
+                        EmployeeId = Seed.DefaultEmployeeId,
+                        Type = previousStock == 0 ? InventoryMovementType.Incoming : InventoryMovementType.Correction,
+                        QuantityDelta = quantityDelta,
+                        Reason = "Instalación del menú Gloria"
+                    });
+            }
         }
         if (!await db.DeliveryOptions.AnyAsync(ct))
             db.DeliveryOptions.AddRange(Seed.DeliveryOptions());
@@ -49,6 +75,7 @@ public sealed class AppInitializer(
 public static class Seed
 {
     public static readonly Guid DefaultEmployeeId = Guid.Parse("11111111-1111-1111-1111-111111111111");
+    public const string CatalogMarker = "Panini de jamón con queso manchego + bebida";
 
     public static IEnumerable<Product> Products() =>
     [
