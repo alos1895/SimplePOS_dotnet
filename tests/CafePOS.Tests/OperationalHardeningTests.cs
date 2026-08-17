@@ -197,7 +197,17 @@ public sealed class OperationalHardeningTests
 
             await using var db = new CafePosDbContext(options);
             Assert.True(await db.Employees.AnyAsync());
-            Assert.True(await db.Products.AnyAsync());
+            var menu = await db.Products.Where(x => x.IsActive).ToListAsync();
+            Assert.Equal(38, menu.Count);
+            Assert.Contains(menu, x => x.Name == "Panini de jamón con queso manchego + bebida" && x.Price == 149m);
+            Assert.Contains(menu, x => x.Name == "Panini de pollo con queso manchego + bebida" && x.Price == 159m);
+            Assert.Contains(menu, x => x.Name == "Latte + muffin" && x.Price == 99m);
+            Assert.Equal(6, menu.Count(x => x.Name.EndsWith("+ bebida") && x.Name.StartsWith("Croissant")));
+            Assert.Equal(6, menu.Count(x => x.Price == 69m));
+            Assert.Contains(menu, x => x.Name == "Café americano" && x.Price == 55m && x.Category == ProductCategory.Coffee);
+            Assert.Contains(menu, x => x.Name == "Café latte a las rocas" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.Contains(menu, x => x.Name == "Frapuchino" && x.Price == 78m);
+            Assert.Contains(menu, x => x.Name == "Botella de agua 500 ml" && x.Price == 16m);
         }
         finally { Delete(path); }
     }
