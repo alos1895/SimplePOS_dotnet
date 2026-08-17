@@ -26,6 +26,7 @@
         <Button Classes="secondary" Content="Bebidas Calientes" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.HotBeverages}"/>
         <Button Classes="secondary" Content="Comida" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Food}"/>
         <Button Classes="secondary" Content="Postres" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Desserts}"/>
+        <Button Classes="secondary" Content="Combos" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Combos}"/>
         <Button Classes="secondary" Content="Extras" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Extras}"/>
         <Button Classes="secondary" Content="Notas" Command="{Binding SelectCatalogSectionCommand}" CommandParameter="{x:Static models:CatalogSection.Notes}"/>
        </WrapPanel>

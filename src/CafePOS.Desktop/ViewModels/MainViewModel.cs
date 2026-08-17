@@ -768,6 +768,7 @@ public partial class MainViewModel(
             CatalogSection.HotBeverages => ProductCategory.Coffee,
             CatalogSection.Food => ProductCategory.Food,
             CatalogSection.Desserts => ProductCategory.Desserts,
+            CatalogSection.Combos => ProductCategory.Combos,
             _ => ProductCategory.Extras
         };
         foreach (var item in allCatalogItems.Where(x => x.Category == category))
@@ -914,6 +915,7 @@ public partial class MainViewModel(
         ProductCategory.Beverages => "Bebidas Frías",
         ProductCategory.Food => "Comida",
         ProductCategory.Desserts => "Postres",
+        ProductCategory.Combos => "Combos",
         _ => "Extras"
     };
 

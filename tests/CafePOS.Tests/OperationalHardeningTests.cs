@@ -208,6 +208,9 @@ public sealed class OperationalHardeningTests
             Assert.Contains(menu, x => x.Name == "Café latte a las rocas" && x.Price == 75m && x.Category == ProductCategory.Beverages);
             Assert.Contains(menu, x => x.Name == "Frapuchino" && x.Price == 78m);
             Assert.Contains(menu, x => x.Name == "Botella de agua 500 ml" && x.Price == 16m);
+            Assert.Equal(11, menu.Count(x => x.Category == ProductCategory.Combos));
+            Assert.All(menu.Where(x => x.Name.Contains("+ bebida") || x.Name.Contains("+ muffin")),
+                product => Assert.Equal(ProductCategory.Combos, product.Category));
         }
         finally { Delete(path); }
     }
@@ -240,7 +243,44 @@ public sealed class OperationalHardeningTests
             await using var verification = new CafePosDbContext(options);
             Assert.Equal(38, await verification.Products.CountAsync(x => x.IsActive));
             Assert.False((await verification.Products.SingleAsync(x => x.Name == "Espresso")).IsActive);
-            Assert.True(await verification.Products.AnyAsync(x => x.Name == Seed.CatalogMarker && x.IsActive));
+            Assert.True(await verification.Products.AnyAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
+        }
+        finally { Delete(path); }
+    }
+
+    [Fact]
+    public async Task Initializer_moves_existing_food_and_drink_products_into_combos()
+    {
+        var path = NewPath();
+        try
+        {
+            var options = new DbContextOptionsBuilder<CafePosDbContext>()
+                .UseSqlite($"Data Source={path};Pooling=False").Options;
+            await using (var db = new CafePosDbContext(options))
+            {
+                await db.Database.MigrateAsync();
+                db.Products.Add(new Product
+                {
+                    Name = Seed.CatalogMarker,
+                    Category = ProductCategory.Food,
+                    Price = 149m,
+                    StockQuantity = 30
+                });
+                await db.SaveChangesAsync();
+            }
+
+            var initializer = new AppInitializer(
+                new TestPaths(path), new NoBackup(), new TestFactory(options), NullLogger<AppInitializer>.Instance);
+            await initializer.InitializeAsync();
+
+            await using var verification = new CafePosDbContext(options);
+            Assert.False((await verification.Products.SingleAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Food)).IsActive);
+            Assert.True(await verification.Products.AnyAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
+            Assert.Equal(11, await verification.Products.CountAsync(x =>
+                x.Category == ProductCategory.Combos && x.IsActive));
         }
         finally { Delete(path); }
     }

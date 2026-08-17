@@ -3,7 +3,7 @@ namespace CafePOS.Domain.Enums;
 public enum OrderStatus { Open, Paid, Cancelled }
 public enum PaymentMethod { Cash, Transfer, Card }
 public enum PaymentKind { Collection, Reversal, Refund }
-public enum ProductCategory { Coffee, Beverages, Food, Desserts, Extras }
+public enum ProductCategory { Coffee, Beverages, Food, Desserts, Extras, Combos }
 public enum DeliveryType { Pickup, Walking, Delivery }
 public enum DeliveryStatus { None, Preparing, OutForDelivery, Delivered, Cancelled }
 public enum InventoryMovementType { Incoming, Count, Waste, Correction, Sale, Cancellation }
