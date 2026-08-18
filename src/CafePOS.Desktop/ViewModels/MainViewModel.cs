@@ -24,7 +24,9 @@ public partial class MainViewModel(
     ICurrentUserContext currentUser,
     IUpdateService updates,
     IUpdateInstaller updateInstaller,
-    ISettingsService settings) : ObservableObject
+    ISettingsService settings,
+    IReceiptPrinter printer,
+    TicketFormatter tickets) : ObservableObject
 {
     private readonly List<CatalogItem> allCatalogItems = [];
     private AdminCatalogData adminCatalogData = new([], []);
@@ -37,6 +39,7 @@ public partial class MainViewModel(
     public ObservableCollection<ManualTransaction> ManualTransactions { get; } = [];
     public ObservableCollection<AdminProductItem> AdminProducts { get; } = [];
     public ObservableCollection<AdminDeliveryOptionItem> AdminDeliveryOptions { get; } = [];
+    public ObservableCollection<string> InstalledPrinters { get; } = [];
 
     public IReadOnlyList<NamedOption<ProductCategory>> ProductCategories { get; } =
         Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory>(x, CategoryLabel(x))).ToList();
@@ -84,6 +87,10 @@ public partial class MainViewModel(
     [ObservableProperty] private string metricsToText = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     [ObservableProperty] private BusinessMetrics metrics = BusinessMetrics.Empty;
     [ObservableProperty] private UpdateInfo? availableUpdate;
+    [ObservableProperty] private string? selectedKitchenPrinter;
+    [ObservableProperty] private string? selectedCustomerPrinter;
+    [ObservableProperty] private bool autoPrintKitchen;
+    [ObservableProperty] private bool autoPrintCustomer;
 
     public bool IsNotesSection => SelectedCatalogSection == CatalogSection.Notes;
     public bool IsProductSection => !IsNotesSection;
@@ -119,6 +126,11 @@ public partial class MainViewModel(
         await RefreshHistory();
         await RefreshManualTransactions();
         await RefreshCashReport();
+        await RefreshPrinters();
+        SelectedKitchenPrinter = settings.Current.KitchenPrinter;
+        SelectedCustomerPrinter = settings.Current.CustomerPrinter;
+        AutoPrintKitchen = settings.Current.AutoPrintKitchen;
+        AutoPrintCustomer = settings.Current.AutoPrintCustomer;
         if (settings.Current.CheckUpdates) await CheckForUpdate();
     }
 
@@ -179,7 +191,8 @@ public partial class MainViewModel(
             await RefreshCatalogAsync();
             await LoadHistoryAsync(order.Id);
             await RefreshCashReport();
-            StatusMessage = $"Orden #{number} guardada; seleccione efectivo o tarjeta para liquidarla.";
+            var printed = AutoPrintKitchen ? await TryPrintAsync(order, true) : "";
+            StatusMessage = $"Orden #{number} guardada; seleccione efectivo o tarjeta para liquidarla.{printed}";
         }
         catch (Exception ex)
         {
@@ -248,7 +261,8 @@ public partial class MainViewModel(
             var order = await checkout.PayTotalAsync(SelectedHistoryOrder!.Id, method);
             await LoadHistoryAsync(order.Id);
             await RefreshCashReport();
-            StatusMessage = $"Orden #{order.DailyNumber} liquidada con {PaymentLabel(method).ToLowerInvariant()}.";
+            var printed = AutoPrintCustomer ? await TryPrintAsync(order, false) : "";
+            StatusMessage = $"Orden #{order.DailyNumber} liquidada con {PaymentLabel(method).ToLowerInvariant()}.{printed}";
         }
         catch (Exception ex)
         {
@@ -474,6 +488,64 @@ public partial class MainViewModel(
     {
         var path = await backups.CreateAsync("manual");
         StatusMessage = path is null ? "Aún no existe base para respaldar." : $"Respaldo: {path}";
+    }
+
+    [RelayCommand]
+    private async Task RefreshPrinters()
+    {
+        try
+        {
+            InstalledPrinters.Clear();
+            foreach (var name in await printer.GetInstalledPrintersAsync()) InstalledPrinters.Add(name);
+            StatusMessage = printer.IsSupported
+                ? $"Impresoras detectadas: {InstalledPrinters.Count}."
+                : "Las impresoras USB se detectan al ejecutar CafePOS en Windows.";
+        }
+        catch (Exception ex) { StatusMessage = $"No se pudieron consultar las impresoras: {ex.Message}"; }
+    }
+
+    [RelayCommand]
+    private async Task SavePrinterSettings()
+    {
+        try
+        {
+            await settings.SaveAsync(settings.Current with
+            {
+                KitchenPrinter = SelectedKitchenPrinter ?? "",
+                CustomerPrinter = SelectedCustomerPrinter ?? "",
+                AutoPrintKitchen = AutoPrintKitchen,
+                AutoPrintCustomer = AutoPrintCustomer
+            });
+            StatusMessage = "Configuración de impresoras guardada.";
+        }
+        catch (Exception ex) { StatusMessage = $"No se pudo guardar la configuración: {ex.Message}"; }
+    }
+
+    [RelayCommand]
+    private async Task PrintKitchen()
+    {
+        if (SelectedHistoryOrder is null) { StatusMessage = "Seleccione una orden."; return; }
+        StatusMessage = $"Comanda de orden #{SelectedHistoryOrder.DailyNumber}.{await TryPrintAsync(SelectedHistoryOrder, true)}";
+    }
+
+    [RelayCommand]
+    private async Task PrintCustomer()
+    {
+        if (SelectedHistoryOrder is null) { StatusMessage = "Seleccione una orden."; return; }
+        StatusMessage = $"Ticket de orden #{SelectedHistoryOrder.DailyNumber}.{await TryPrintAsync(SelectedHistoryOrder, false)}";
+    }
+
+    private async Task<string> TryPrintAsync(Order order, bool kitchen)
+    {
+        try
+        {
+            var printerName = kitchen ? SelectedKitchenPrinter : SelectedCustomerPrinter;
+            var kind = kitchen ? "Cocina" : "Cliente";
+            await printer.PrintAsync(printerName ?? "", $"CafePOS {kind} #{order.DailyNumber}",
+                kitchen ? tickets.Kitchen(order) : tickets.Customer(order));
+            return $" Impresión de {kind.ToLowerInvariant()} enviada.";
+        }
+        catch (Exception ex) { return $" No se pudo imprimir: {ex.Message}"; }
     }
 
     partial void OnSelectedHistoryOrderChanged(Order? value)

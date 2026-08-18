@@ -6,7 +6,7 @@ internal static class Program
  {
   var paths=new CafePOS.Infrastructure.Paths.PlatformDataPathProvider();Directory.CreateDirectory(paths.LogDirectory);
   Log.Logger=new LoggerConfiguration().MinimumLevel.Information().WriteTo.File(Path.Combine(paths.LogDirectory,"cafepos-.log"),rollingInterval:RollingInterval.Day,retainedFileCountLimit:14).CreateLogger();
-  Host=Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args).UseSerilog().ConfigureServices(s=>{s.AddCafePosInfrastructure();s.AddSingleton<OrderService>();s.AddSingleton<CheckoutService>();s.AddSingleton<ManualTransactionService>();s.AddSingleton<CashReportService>();s.AddSingleton<BusinessMetricsService>();s.AddSingleton<AdminCatalogService>();s.AddSingleton<MainViewModel>();}).Build();
+  Host=Microsoft.Extensions.Hosting.Host.CreateDefaultBuilder(args).UseSerilog().ConfigureServices(s=>{s.AddCafePosInfrastructure();s.AddSingleton<TicketFormatter>();s.AddSingleton<OrderService>();s.AddSingleton<CheckoutService>();s.AddSingleton<ManualTransactionService>();s.AddSingleton<CashReportService>();s.AddSingleton<BusinessMetricsService>();s.AddSingleton<AdminCatalogService>();s.AddSingleton<MainViewModel>();}).Build();
   try { Host.Services.GetRequiredService<IAppInitializer>().InitializeAsync().GetAwaiter().GetResult(); BuildAvaloniaApp().StartWithClassicDesktopLifetime(args); }
   catch(Exception ex) { Log.Fatal(ex,"CafePOS could not start");throw; } finally { Host.Dispose();Log.CloseAndFlush(); }
  }

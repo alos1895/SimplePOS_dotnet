@@ -71,6 +71,13 @@ public interface ISettingsService
     Task SaveAsync(AppSettings settings, CancellationToken ct = default);
 }
 
+public interface IReceiptPrinter
+{
+    bool IsSupported { get; }
+    Task<IReadOnlyList<string>> GetInstalledPrintersAsync(CancellationToken ct = default);
+    Task PrintAsync(string printerName, string documentName, string content, CancellationToken ct = default);
+}
+
 public interface IUpdateService
 {
     Task<UpdateInfo?> CheckAsync(CancellationToken ct = default);
@@ -83,4 +90,7 @@ public interface IUpdateInstaller
 }
 
 public sealed record UpdateInfo(Version Version, Uri DownloadUri, string FileName);
-public sealed record AppSettings(string StoreName = "CafePOS", string Currency = "MXN", int RegisterNumber = 1, string? GitHubRepository = "alos1895/SimplePOS_dotnet", bool CheckUpdates = true);
+public sealed record AppSettings(string StoreName = "CafePOS", string Currency = "MXN", int RegisterNumber = 1,
+    string? GitHubRepository = "alos1895/SimplePOS_dotnet", bool CheckUpdates = true,
+    string KitchenPrinter = "", string CustomerPrinter = "",
+    bool AutoPrintKitchen = false, bool AutoPrintCustomer = false);
