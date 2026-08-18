@@ -63,16 +63,10 @@
         <TextBlock Text="Detalle de la orden" FontSize="20" FontWeight="Bold"/>
         <TextBlock Text="{Binding SelectedOrderTitle}" FontSize="16" FontWeight="SemiBold"/>
         <TextBlock Text="{Binding SelectedOrderSummary}" TextWrapping="Wrap" Foreground="#667085"/>
-        <Border Background="#EEF4FF" BorderBrush="#B2CCFF" BorderThickness="1" CornerRadius="10" Padding="12">
-         <StackPanel Spacing="8">
-          <TextBlock Text="Impresión de tickets" FontSize="16" FontWeight="Bold" Foreground="#1849A9"/>
-          <TextBlock Text="Imprime nuevamente la comanda de cocina o el ticket del cliente." TextWrapping="Wrap" Foreground="#475467"/>
-          <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
-           <Button Classes="primary" Content="IMPRIMIR COCINA" Command="{Binding PrintKitchenCommand}" IsEnabled="{Binding CanPrintSelectedOrder}" HorizontalAlignment="Stretch"/>
-           <Button Grid.Column="1" Classes="primary" Content="IMPRIMIR CLIENTE" Command="{Binding PrintCustomerCommand}" IsEnabled="{Binding CanPrintSelectedOrder}" HorizontalAlignment="Stretch"/>
-          </Grid>
-         </StackPanel>
-        </Border>
+        <WrapPanel>
+         <Button Classes="secondary" Content="Imprimir cocina" Command="{Binding PrintKitchenCommand}" IsEnabled="{Binding CanPrintSelectedOrder}"/>
+         <Button Classes="secondary" Content="Imprimir cliente" Command="{Binding PrintCustomerCommand}" IsEnabled="{Binding CanPrintSelectedOrder}"/>
+        </WrapPanel>
         <Separator/>
         <TextBlock Text="Cliente" FontWeight="SemiBold"/>
         <TextBox Watermark="Nombre" Text="{Binding SelectedHistoryOrder.CustomerName}"/>
