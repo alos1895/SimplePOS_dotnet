@@ -18,6 +18,7 @@ public sealed class TicketFormatterTests
         Assert.Contains("ORDEN #18", ticket);
         Assert.Contains("2 x Latte", ticket);
         Assert.Contains("Sin azúcar", ticket);
+        Assert.All(ticket.Split('\n', StringSplitOptions.RemoveEmptyEntries), line => Assert.True(line.Length <= 32));
     }
 
     [Fact]
@@ -30,6 +31,7 @@ public sealed class TicketFormatterTests
         Assert.Contains("TICKET DE VENTA", ticket);
         Assert.Contains("TOTAL:", ticket);
         Assert.Contains("Pago: Efectivo", ticket);
+        Assert.Contains(new string('-', 32), ticket);
     }
 
     private static Order CreateOrder() => new()

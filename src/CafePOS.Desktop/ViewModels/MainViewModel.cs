@@ -87,8 +87,7 @@ public partial class MainViewModel(
     [ObservableProperty] private string metricsToText = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     [ObservableProperty] private BusinessMetrics metrics = BusinessMetrics.Empty;
     [ObservableProperty] private UpdateInfo? availableUpdate;
-    [ObservableProperty] private string? selectedKitchenPrinter;
-    [ObservableProperty] private string? selectedCustomerPrinter;
+    [ObservableProperty] private string? selectedPrinter;
     [ObservableProperty] private bool autoPrintKitchen;
     [ObservableProperty] private bool autoPrintCustomer;
 
@@ -128,8 +127,9 @@ public partial class MainViewModel(
         await RefreshManualTransactions();
         await RefreshCashReport();
         await RefreshPrinters();
-        SelectedKitchenPrinter = settings.Current.KitchenPrinter;
-        SelectedCustomerPrinter = settings.Current.CustomerPrinter;
+        SelectedPrinter = FirstConfiguredPrinter(settings.Current);
+        if (string.IsNullOrWhiteSpace(SelectedPrinter) && InstalledPrinters.Count == 1)
+            SelectedPrinter = InstalledPrinters[0];
         AutoPrintKitchen = settings.Current.AutoPrintKitchen;
         AutoPrintCustomer = settings.Current.AutoPrintCustomer;
         if (settings.Current.CheckUpdates) await CheckForUpdate();
@@ -512,12 +512,13 @@ public partial class MainViewModel(
         {
             await settings.SaveAsync(settings.Current with
             {
-                KitchenPrinter = SelectedKitchenPrinter ?? "",
-                CustomerPrinter = SelectedCustomerPrinter ?? "",
+                PrinterName = SelectedPrinter ?? "",
+                KitchenPrinter = "",
+                CustomerPrinter = "",
                 AutoPrintKitchen = AutoPrintKitchen,
                 AutoPrintCustomer = AutoPrintCustomer
             });
-            StatusMessage = "Configuración de impresoras guardada.";
+            StatusMessage = "Configuración de impresora guardada.";
         }
         catch (Exception ex) { StatusMessage = $"No se pudo guardar la configuración: {ex.Message}"; }
     }
@@ -540,14 +541,17 @@ public partial class MainViewModel(
     {
         try
         {
-            var printerName = kitchen ? SelectedKitchenPrinter : SelectedCustomerPrinter;
             var kind = kitchen ? "Cocina" : "Cliente";
-            await printer.PrintAsync(printerName ?? "", $"CafePOS {kind} #{order.DailyNumber}",
+            await printer.PrintAsync(SelectedPrinter ?? "", $"CafePOS {kind} #{order.DailyNumber}",
                 kitchen ? tickets.Kitchen(order) : tickets.Customer(order));
             return $" Impresión de {kind.ToLowerInvariant()} enviada.";
         }
         catch (Exception ex) { return $" No se pudo imprimir: {ex.Message}"; }
     }
+
+    private static string FirstConfiguredPrinter(AppSettings value) =>
+        !string.IsNullOrWhiteSpace(value.PrinterName) ? value.PrinterName :
+        !string.IsNullOrWhiteSpace(value.CustomerPrinter) ? value.CustomerPrinter : value.KitchenPrinter;
 
     partial void OnSelectedHistoryOrderChanged(Order? value)
     {

@@ -112,7 +112,8 @@ respaldos están fuera de la carpeta de instalación, por lo que no se reemplaza
 ## Alcance pendiente
 
 Firma de código del ejecutable y del instalador, e interfaz de ajustes completa.
-La impresión térmica USB está disponible en Windows para impresoras instaladas compatibles con
-ESC/POS. En **Admin** se asignan por separado las impresoras de cocina y cliente, se activa la
-impresión automática y, desde **Historial**, se puede reimprimir cualquiera de los dos tickets.
+La impresión térmica USB está disponible en Windows para la impresora **58-VII-U** instalada,
+compatible con ESC/POS, papel de 58 mm y 384 puntos por línea. En **Admin** se selecciona una sola
+impresora para comandas de cocina y tickets de cliente, se activa la impresión automática y,
+desde **Historial**, se puede reimprimir cualquiera de los dos tickets.
 Impresoras de red y Bluetooth continúan fuera del alcance.

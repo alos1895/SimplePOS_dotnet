@@ -8,7 +8,8 @@ namespace CafePOS.Application.Services;
 
 public sealed class TicketFormatter(ISettingsService settings)
 {
-    private const int Width = 42;
+    // La impresora 58-VII-U tiene 384 puntos por línea: 32 caracteres con la fuente A ESC/POS.
+    private const int Width = 32;
 
     public string Kitchen(Order order)
     {
