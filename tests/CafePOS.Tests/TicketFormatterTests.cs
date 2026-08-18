@@ -15,7 +15,7 @@ public sealed class TicketFormatterTests
         var ticket = formatter.Kitchen(CreateOrder());
 
         Assert.Contains("COMANDA COCINA", ticket);
-        Assert.Contains("Gloria Café", ticket);
+        Assert.DoesNotContain("Gloria Café", ticket);
         Assert.Contains("ORDEN #18", ticket);
         Assert.Contains("2 x Latte", ticket);
         Assert.Contains("Sin azúcar", ticket);
