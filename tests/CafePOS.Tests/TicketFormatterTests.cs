@@ -2,6 +2,7 @@ using CafePOS.Application.Interfaces;
 using CafePOS.Application.Services;
 using CafePOS.Domain.Entities;
 using CafePOS.Domain.Enums;
+using Xunit;
 
 namespace CafePOS.Tests;
 
