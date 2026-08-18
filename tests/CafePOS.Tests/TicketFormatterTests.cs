@@ -18,7 +18,8 @@ public sealed class TicketFormatterTests
         Assert.Contains("ORDEN #18", ticket);
         Assert.Contains("2 x Latte", ticket);
         Assert.Contains("Sin azúcar", ticket);
-        Assert.All(ticket.Split('\n', StringSplitOptions.RemoveEmptyEntries), line => Assert.True(line.Length <= 32));
+        var lines = ticket.ReplaceLineEndings("\n").Split('\n', StringSplitOptions.RemoveEmptyEntries);
+        Assert.All(lines, line => Assert.True(line.Length <= 32, $"La línea excede 32 caracteres: '{line}'"));
     }
 
     [Fact]
