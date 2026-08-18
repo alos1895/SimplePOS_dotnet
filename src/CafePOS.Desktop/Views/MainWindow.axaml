@@ -57,7 +57,43 @@
      <Grid Grid.Row="1" RowDefinitions="Auto,*"><Grid ColumnDefinitions="150,150,*,Auto,Auto" ColumnSpacing="8"><TextBox Watermark="Desde yyyy-MM-dd" Text="{Binding HistoryFromText}"/><TextBox Grid.Column="1" Watermark="Hasta yyyy-MM-dd" Text="{Binding HistoryToText}"/><TextBox Grid.Column="2" Watermark="Buscar cliente, teléfono, orden o producto" Text="{Binding HistorySearch}"/><Button Grid.Column="3" Classes="secondary" Content="Hoy" Command="{Binding ShowTodayHistoryCommand}"/><Button Grid.Column="4" Classes="primary" Content="Actualizar" Command="{Binding RefreshHistoryCommand}"/></Grid>
       <ListBox Grid.Row="1" ItemsSource="{Binding History}" SelectedItem="{Binding SelectedHistoryOrder}" Margin="0,12,0,0" BorderThickness="0" Background="Transparent"><ListBox.ItemTemplate><DataTemplate><Border Background="White" CornerRadius="10" Padding="14" Margin="0,0,0,8"><Grid ColumnDefinitions="*,Auto"><StackPanel><TextBlock Text="{Binding DailyNumber, StringFormat='Orden #{0}'}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="{Binding CustomerName}"/><TextBlock Text="{Binding CustomerPhone}" FontSize="12" Foreground="#667085"/><TextBlock Text="{Binding Total, StringFormat='MXN {0:N2}'}" FontWeight="SemiBold" Foreground="#2D6A4F"/></StackPanel><StackPanel Grid.Column="1" HorizontalAlignment="Right"><TextBlock Text="{Binding Status}" Foreground="#4F659D" FontWeight="SemiBold"/><TextBlock Text="{Binding CreatedAt, StringFormat='{}{0:dd/MM HH:mm}'}" FontSize="12" Foreground="#667085"/></StackPanel></Grid></Border></DataTemplate></ListBox.ItemTemplate></ListBox>
      </Grid>
-     <Border Grid.Column="1" Grid.Row="1" Background="White" CornerRadius="14" Padding="20"><ScrollViewer><StackPanel Spacing="10"><TextBlock Text="Detalle de la orden" FontSize="20" FontWeight="Bold"/><TextBlock Text="{Binding SelectedOrderTitle}" FontSize="16" FontWeight="SemiBold"/><TextBlock Text="{Binding SelectedOrderSummary}" TextWrapping="Wrap" Foreground="#667085"/><Separator/><TextBlock Text="Cliente" FontWeight="SemiBold"/><TextBox Watermark="Nombre" Text="{Binding SelectedHistoryOrder.CustomerName}"/><TextBox Watermark="Teléfono" Text="{Binding SelectedHistoryOrder.CustomerPhone}"/><TextBox Watermark="Dirección" Text="{Binding SelectedHistoryOrder.DeliveryAddress}"/><TextBox Watermark="Comentarios" Text="{Binding SelectedHistoryOrder.Comments}" AcceptsReturn="True" MinHeight="55"/><Button Classes="secondary" Content="Guardar datos de orden" Command="{Binding SaveSelectedOrderCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/><Separator/><TextBlock Text="Partidas" FontWeight="SemiBold"/><ItemsControl ItemsSource="{Binding SelectedOrderItems}"><ItemsControl.ItemTemplate><DataTemplate><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding ProductName}" Margin="0,3"/><TextBlock Grid.Column="1" Text="{Binding LineTotal, StringFormat='MXN {0:N2}'}" Margin="8,3"/></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl><TextBlock Text="{Binding SelectedHistoryOrder.DeliveryOptionName}" FontSize="12" Foreground="#667085"/><WrapPanel><Button Classes="secondary" Content="Imprimir cocina" Command="{Binding PrintKitchenCommand}"/><Button Classes="secondary" Content="Imprimir cliente" Command="{Binding PrintCustomerCommand}"/></WrapPanel><Separator/><TextBlock Text="Pago" FontWeight="SemiBold"/><TextBlock Text="Liquida la orden completa con un solo método." Foreground="#667085"/><TextBlock Text="{Binding SelectedPaymentBalance, StringFormat='Total pendiente: MXN {0:N2}'}" Foreground="#B54708"/><WrapPanel><Button Classes="primary" Content="Pagar total efectivo" Command="{Binding PayTotalCashCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/><Button Classes="primary" Content="Pagar total tarjeta" Command="{Binding PayTotalCardCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/></WrapPanel><TextBox Watermark="Motivo de cancelación" Text="{Binding CancellationReason}" Margin="0,12,0,0"/><Button Classes="danger" Content="Cancelar orden" Command="{Binding CancelSelectedOrderCommand}" IsEnabled="{Binding CanCancelSelectedOrder}"/></StackPanel></ScrollViewer></Border>
+     <Border Grid.Column="1" Grid.Row="1" Background="White" CornerRadius="14" Padding="20">
+      <ScrollViewer>
+       <StackPanel Spacing="10">
+        <TextBlock Text="Detalle de la orden" FontSize="20" FontWeight="Bold"/>
+        <TextBlock Text="{Binding SelectedOrderTitle}" FontSize="16" FontWeight="SemiBold"/>
+        <TextBlock Text="{Binding SelectedOrderSummary}" TextWrapping="Wrap" Foreground="#667085"/>
+        <Border Background="#EEF4FF" BorderBrush="#B2CCFF" BorderThickness="1" CornerRadius="10" Padding="12">
+         <StackPanel Spacing="8">
+          <TextBlock Text="Impresión de tickets" FontSize="16" FontWeight="Bold" Foreground="#1849A9"/>
+          <TextBlock Text="Imprime nuevamente la comanda de cocina o el ticket del cliente." TextWrapping="Wrap" Foreground="#475467"/>
+          <Grid ColumnDefinitions="*,*" ColumnSpacing="8">
+           <Button Classes="primary" Content="IMPRIMIR COCINA" Command="{Binding PrintKitchenCommand}" IsEnabled="{Binding CanPrintSelectedOrder}" HorizontalAlignment="Stretch"/>
+           <Button Grid.Column="1" Classes="primary" Content="IMPRIMIR CLIENTE" Command="{Binding PrintCustomerCommand}" IsEnabled="{Binding CanPrintSelectedOrder}" HorizontalAlignment="Stretch"/>
+          </Grid>
+         </StackPanel>
+        </Border>
+        <Separator/>
+        <TextBlock Text="Cliente" FontWeight="SemiBold"/>
+        <TextBox Watermark="Nombre" Text="{Binding SelectedHistoryOrder.CustomerName}"/>
+        <TextBox Watermark="Teléfono" Text="{Binding SelectedHistoryOrder.CustomerPhone}"/>
+        <TextBox Watermark="Dirección" Text="{Binding SelectedHistoryOrder.DeliveryAddress}"/>
+        <TextBox Watermark="Comentarios" Text="{Binding SelectedHistoryOrder.Comments}" AcceptsReturn="True" MinHeight="55"/>
+        <Button Classes="secondary" Content="Guardar datos de orden" Command="{Binding SaveSelectedOrderCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/>
+        <Separator/>
+        <TextBlock Text="Partidas" FontWeight="SemiBold"/>
+        <ItemsControl ItemsSource="{Binding SelectedOrderItems}"><ItemsControl.ItemTemplate><DataTemplate><Grid ColumnDefinitions="*,Auto"><TextBlock Text="{Binding ProductName}" Margin="0,3"/><TextBlock Grid.Column="1" Text="{Binding LineTotal, StringFormat='MXN {0:N2}'}" Margin="8,3"/></Grid></DataTemplate></ItemsControl.ItemTemplate></ItemsControl>
+        <TextBlock Text="{Binding SelectedHistoryOrder.DeliveryOptionName}" FontSize="12" Foreground="#667085"/>
+        <Separator/>
+        <TextBlock Text="Pago" FontWeight="SemiBold"/>
+        <TextBlock Text="Liquida la orden completa con un solo método." Foreground="#667085"/>
+        <TextBlock Text="{Binding SelectedPaymentBalance, StringFormat='Total pendiente: MXN {0:N2}'}" Foreground="#B54708"/>
+        <WrapPanel><Button Classes="primary" Content="Pagar total efectivo" Command="{Binding PayTotalCashCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/><Button Classes="primary" Content="Pagar total tarjeta" Command="{Binding PayTotalCardCommand}" IsEnabled="{Binding CanEditSelectedOrder}"/></WrapPanel>
+        <TextBox Watermark="Motivo de cancelación" Text="{Binding CancellationReason}" Margin="0,12,0,0"/>
+        <Button Classes="danger" Content="Cancelar orden" Command="{Binding CancelSelectedOrderCommand}" IsEnabled="{Binding CanCancelSelectedOrder}"/>
+       </StackPanel>
+      </ScrollViewer>
+     </Border>
     </Grid>
    </TabItem>
    <TabItem Header="Movimientos">

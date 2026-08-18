@@ -101,6 +101,7 @@ public partial class MainViewModel(
     public string CurrentUserRole => $"{currentUser.Current.DisplayName} · {currentUser.Current.Role}";
     public bool CanEditSelectedOrder => SelectedHistoryOrder?.Status == OrderStatus.Open;
     public bool CanCancelSelectedOrder => SelectedHistoryOrder is { Status: not OrderStatus.Cancelled };
+    public bool CanPrintSelectedOrder => SelectedHistoryOrder is not null;
     public bool HasManualTransactions => ManualTransactions.Count > 0;
     public bool IsManualTransactionHistoryEmpty => !HasManualTransactions;
     public bool HasAvailableUpdate => AvailableUpdate is not null;
@@ -560,6 +561,7 @@ public partial class MainViewModel(
         OnPropertyChanged(nameof(SelectedPaymentBalance));
         OnPropertyChanged(nameof(CanEditSelectedOrder));
         OnPropertyChanged(nameof(CanCancelSelectedOrder));
+        OnPropertyChanged(nameof(CanPrintSelectedOrder));
     }
 
     partial void OnSelectedDeliveryOptionChanged(DeliveryOptionItem? value)
