@@ -7,7 +7,6 @@ namespace CafePOS.Infrastructure.Persistence;
 public sealed class CafePosDbContext(DbContextOptions<CafePosDbContext> options) : DbContext(options)
 {
     public DbSet<Product> Products => Set<Product>();
-    public DbSet<InventoryMovement> InventoryMovements => Set<InventoryMovement>();
     public DbSet<DeliveryOption> DeliveryOptions => Set<DeliveryOption>();
     public DbSet<Employee> Employees => Set<Employee>();
     public DbSet<Order> Orders => Set<Order>();
@@ -23,18 +22,6 @@ public sealed class CafePosDbContext(DbContextOptions<CafePosDbContext> options)
 
         builder.Entity<Product>().HasIndex(x => new { x.Category, x.Name }).IsUnique();
         builder.Entity<Product>().Property(x => x.Price).HasConversion(cents);
-        builder.Entity<Product>().Property(x => x.StockQuantity).IsConcurrencyToken();
-        builder.Entity<Product>().ToTable(x =>
-        {
-            x.HasCheckConstraint("CK_Products_StockQuantity", "StockQuantity >= 0");
-            x.HasCheckConstraint("CK_Products_LowStockThreshold", "LowStockThreshold >= 0");
-        });
-
-        builder.Entity<InventoryMovement>().HasIndex(x => new { x.BusinessDate, x.ProductId });
-        builder.Entity<InventoryMovement>().HasIndex(x => x.OrderId);
-        builder.Entity<InventoryMovement>().HasOne(x => x.Product).WithMany().HasForeignKey(x => x.ProductId)
-            .OnDelete(DeleteBehavior.Restrict);
-
         builder.Entity<DeliveryOption>().HasIndex(x => x.Name).IsUnique();
         builder.Entity<DeliveryOption>().Property(x => x.Fee).HasConversion(cents);
 

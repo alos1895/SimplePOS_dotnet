@@ -19,7 +19,7 @@ public sealed class OperationalHardeningTests
         var path = NewPath();
         try
         {
-            var (options, employee, product) = await SetupAsync(path, 3);
+            var (options, employee, product) = await SetupAsync(path);
             var orders = new OrderRepository(new TestFactory(options));
             var order = await orders.SaveOrderAsync(Draft(employee, product));
             var checkout = new CheckoutService(orders);
@@ -45,7 +45,7 @@ public sealed class OperationalHardeningTests
         var path = NewPath();
         try
         {
-            var (options, employee, product) = await SetupAsync(path, 3);
+            var (options, employee, product) = await SetupAsync(path);
             var orders = new OrderRepository(new TestFactory(options));
             var order = await orders.SaveOrderAsync(Draft(employee, product));
             var checkout = new CheckoutService(orders);
@@ -60,26 +60,19 @@ public sealed class OperationalHardeningTests
     }
 
     [Fact]
-    public async Task Stock_controls_reject_oversell_and_append_adjustment()
+    public async Task Active_product_can_be_sold_repeatedly_without_quantity_limits()
     {
         var path = NewPath();
         try
         {
-            var (options, employee, product) = await SetupAsync(path, 1);
+            var (options, employee, product) = await SetupAsync(path);
             var orders = new OrderRepository(new TestFactory(options));
-            await orders.SaveOrderAsync(Draft(employee, product));
-            await Assert.ThrowsAsync<InvalidOperationException>(() => orders.SaveOrderAsync(Draft(employee, product)));
 
-            var inventory = new InventoryService(new InventoryRepository(new TestFactory(options)));
-            await inventory.AdjustAsync(
-                product.Id, InventoryMovementType.Incoming, 2, "Recepción de leche", "Proveedor local", null, DateTime.Today);
+            await orders.SaveOrderAsync(Draft(employee, product));
+            await orders.SaveOrderAsync(Draft(employee, product));
 
             await using var db = new CafePosDbContext(options);
-            Assert.Equal(2, (await db.Products.SingleAsync()).StockQuantity);
-            var movements = await db.InventoryMovements.OrderBy(x => x.OccurredAt).ToListAsync();
-            Assert.Equal(2, movements.Count);
-            Assert.Equal(InventoryMovementType.Incoming, movements.Last().Type);
-            Assert.Equal("Recepción de leche", movements.Last().Reason);
+            Assert.Equal(2, await db.Orders.CountAsync());
         }
         finally { Delete(path); }
     }
@@ -90,7 +83,7 @@ public sealed class OperationalHardeningTests
         var path = NewPath();
         try
         {
-            var (options, employee, product) = await SetupAsync(path, 3);
+            var (options, employee, product) = await SetupAsync(path);
             var orders = new OrderRepository(new TestFactory(options));
             var service = new OrderService(orders);
             var invalid = Draft(employee, product);
@@ -124,7 +117,7 @@ public sealed class OperationalHardeningTests
         var path = NewPath();
         try
         {
-            var (options, employee, product) = await SetupAsync(path, 5);
+            var (options, employee, product) = await SetupAsync(path);
             var orders = new OrderRepository(new TestFactory(options));
             var first = Draft(employee, product);
             first.BusinessDate = BusinessDate.FromLocalDate(DateTime.Today);
@@ -137,9 +130,7 @@ public sealed class OperationalHardeningTests
 
             var checkout = new CheckoutService(orders);
             await checkout.ReplacePaymentsAsync(savedFirst.Id, [new Payment { Method = PaymentMethod.Card, Amount = 100m }], "Cobro");
-            var metrics = await new BusinessMetricsService(
-                orders,
-                new InventoryRepository(new TestFactory(options))).GetAsync(DateTime.Today, DateTime.Today);
+            var metrics = await new BusinessMetricsService(orders).GetAsync(DateTime.Today, DateTime.Today);
             Assert.Equal(200m, metrics.InvoicedSales);
             Assert.Equal(100m, metrics.CollectedPayments);
             Assert.Equal(100m, metrics.OutstandingBalance);
@@ -154,7 +145,7 @@ public sealed class OperationalHardeningTests
         var path = NewPath();
         try
         {
-            var (options, employee, _) = await SetupAsync(path, 1);
+            var (options, employee, _) = await SetupAsync(path);
             var repository = new ManualTransactionRepository(new TestFactory(options));
             var original = await repository.AddAsync(new ManualTransaction
             {
@@ -221,12 +212,12 @@ public sealed class OperationalHardeningTests
             {
                 await db.Database.MigrateAsync();
                 db.Products.AddRange(
-                    new Product { Name = "Espresso", Category = ProductCategory.Coffee, Price = 35m, StockQuantity = 30 },
-                    new Product { Name = "Latte", Category = ProductCategory.Coffee, Price = 55m, StockQuantity = 30 },
-                    new Product { Name = "Té helado", Category = ProductCategory.Beverages, Price = 35m, StockQuantity = 24 },
-                    new Product { Name = "Sándwich del día", Category = ProductCategory.Food, Price = 85m, StockQuantity = 12 },
-                    new Product { Name = "Panqué", Category = ProductCategory.Desserts, Price = 45m, StockQuantity = 16 },
-                    new Product { Name = "Shot extra", Category = ProductCategory.Extras, Price = 15m, StockQuantity = 40 });
+                    new Product { Name = "Espresso", Category = ProductCategory.Coffee, Price = 35m },
+                    new Product { Name = "Latte", Category = ProductCategory.Coffee, Price = 55m },
+                    new Product { Name = "Té helado", Category = ProductCategory.Beverages, Price = 35m },
+                    new Product { Name = "Sándwich del día", Category = ProductCategory.Food, Price = 85m },
+                    new Product { Name = "Panqué", Category = ProductCategory.Desserts, Price = 45m },
+                    new Product { Name = "Shot extra", Category = ProductCategory.Extras, Price = 15m });
                 await db.SaveChangesAsync();
             }
 
@@ -258,8 +249,7 @@ public sealed class OperationalHardeningTests
                 {
                     Name = Seed.CatalogMarker,
                     Category = ProductCategory.Food,
-                    Price = 149m,
-                    StockQuantity = 30
+                    Price = 149m
                 });
                 await db.SaveChangesAsync();
             }
@@ -279,12 +269,12 @@ public sealed class OperationalHardeningTests
         finally { Delete(path); }
     }
 
-    private static async Task<(DbContextOptions<CafePosDbContext> Options, Employee Employee, Product Product)> SetupAsync(string path, int stock)
+    private static async Task<(DbContextOptions<CafePosDbContext> Options, Employee Employee, Product Product)> SetupAsync(string path)
     {
         var options = new DbContextOptionsBuilder<CafePosDbContext>()
             .UseSqlite($"Data Source={path};Pooling=False").Options;
         var employee = new Employee { DisplayName = "Tester", Role = EmployeeRole.Admin };
-        var product = new Product { Name = "Latte", Category = ProductCategory.Coffee, Price = 100m, StockQuantity = stock };
+        var product = new Product { Name = "Latte", Category = ProductCategory.Coffee, Price = 100m };
         await using var db = new CafePosDbContext(options);
         await db.Database.MigrateAsync();
         db.AddRange(employee, product);

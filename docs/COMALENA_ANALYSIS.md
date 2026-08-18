@@ -14,7 +14,7 @@ diario e inserta la orden y sus renglones normalizados dentro de una transacció
 
 ## Reglas y capacidades observadas
 
-* **Catálogo:** ingredientes, pizzas, precios por tamaño, extras y bases/inventario.
+* **Catálogo:** ingredientes, pizzas, precios por tamaño y extras.
   Una pizza combinada cuesta el precio más alto de sus sabores. Se impide agregarla
   sin una base disponible y al vender se consume la base más antigua.
 * **Órdenes:** consecutivo diario, cliente (nombre/teléfono), comentarios, dirección,
@@ -30,12 +30,11 @@ diario e inserta la orden y sus renglones normalizados dentro de una transacció
   vista calcula ventas por método, ingresos/gastos manuales, categorías, delivery y
   exporta CSV. No hay una entidad durable de sesión de caja/apertura/corte.
 * **Impresión:** existe en Android mediante Bluetooth y tickets separados, pero queda excluida de la recreación de escritorio.
-* **Métricas:** rangos de fecha, KPI, tendencias, rankings e inventario. Los usuarios
+* **Métricas:** rangos de fecha, KPI, tendencias y rankings. Los usuarios
   son clientes en memoria; no existe autenticación ni empleados persistentes.
 * **Riesgos:** dinero en `Double`; JSON duplicado junto a `order_items`; actualización
   de orden no resincroniza renglones; límites diarios suman 86 400 000 ms (DST);
-  `fallbackToDestructiveMigration` puede destruir datos; consumo de inventario ocurre
-  después de la transacción de la orden; y no hay idempotencia de cobros.
+  `fallbackToDestructiveMigration` puede destruir datos y no hay idempotencia de cobros.
 
 ## Mapeo conceptual
 
@@ -64,7 +63,7 @@ de pizza que una cafetería aún no necesita.
 
 No se copian JSON como fuente de verdad, `Double`, singletons Android, repositorios
 acoplados a `Context`, migración destructiva, lógica de calendario por milisegundos,
-ni impresión ni flujo Bluetooth. Delivery, inventario de bases, clientes y métricas avanzadas
+ni impresión ni flujo Bluetooth. Delivery, clientes y métricas avanzadas
 quedan explícitamente fuera del MVP, no bloqueados por el diseño.
 
 ## Arquitectura propuesta y etapas
@@ -77,7 +76,7 @@ para testear integridad sin introducir CQRS, bus de mensajes o repositorio gené
 
 1. **Fundación (incluida):** dominio, EF/SQLite, migración destructiva a cafetería,
    rutas persistentes, backup/rotación, configuración, logs, DI y datos iniciales.
-2. **MVP (incluido):** catálogo genérico, carrito, inventario por producto, pagos
+2. **MVP (incluido):** catálogo genérico, carrito, pagos
    totales (efectivo/tarjeta), entregas, historial y caja.
 3. **Distribución (incluida como base):** consulta GitHub Releases, workflow win-x64
    self-contained y release por tag. La instalación desatendida queda deliberadamente
