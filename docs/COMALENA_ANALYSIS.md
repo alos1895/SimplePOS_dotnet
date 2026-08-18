@@ -78,7 +78,7 @@ para testear integridad sin introducir CQRS, bus de mensajes o repositorio gené
 1. **Fundación (incluida):** dominio, EF/SQLite, migración destructiva a cafetería,
    rutas persistentes, backup/rotación, configuración, logs, DI y datos iniciales.
 2. **MVP (incluido):** catálogo genérico, carrito, inventario por producto, pagos
-   divididos (efectivo/transferencia/tarjeta), entregas, historial y caja.
+   totales (efectivo/tarjeta), entregas, historial y caja.
 3. **Distribución (incluida como base):** consulta GitHub Releases, workflow win-x64
    self-contained y release por tag. La instalación desatendida queda deliberadamente
    en un proceso externo futuro: reemplazar un ejecutable en uso desde sí mismo no es

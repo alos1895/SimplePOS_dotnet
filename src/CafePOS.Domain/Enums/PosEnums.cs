@@ -1,7 +1,7 @@
 namespace CafePOS.Domain.Enums;
 
 public enum OrderStatus { Open, Paid, Cancelled }
-public enum PaymentMethod { Cash, Transfer, Card }
+public enum PaymentMethod { Cash, Card }
 public enum PaymentKind { Collection, Reversal, Refund }
 public enum ProductCategory { Coffee, Beverages, Food, Desserts, Extras, Combos }
 public enum DeliveryType { Pickup, Walking, Delivery }

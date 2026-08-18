@@ -82,7 +82,7 @@ public sealed class CafeSchemaAndInventoryTests
     }
 
     [Fact]
-    public async Task Replacing_an_open_order_payment_breakdown_updates_balance_and_status()
+    public async Task Paying_total_marks_order_as_paid()
     {
         var databasePath = Path.Combine(AppContext.BaseDirectory, $"{Guid.NewGuid():N}.db");
         try
@@ -104,23 +104,13 @@ public sealed class CafeSchemaAndInventoryTests
                 Items = [new OrderItem { ProductId = product.Id, ProductName = product.Name, Category = product.Category, UnitPrice = product.Price, Quantity = 1 }]
             });
             var checkout = new CheckoutService(repository);
-            var partial = await checkout.ReplacePaymentsAsync(order.Id,
-                [new Payment { Method = PaymentMethod.Cash, Amount = 40m }], "Cobro inicial");
-
-            Assert.Equal(OrderStatus.Open, partial.Status);
-            Assert.Equal(60m, partial.BalanceDue);
-
-            var paid = await checkout.ReplacePaymentsAsync(order.Id,
-            [
-                new Payment { Id = partial.Payments.Single().Id, Method = PaymentMethod.Cash, Amount = 40m },
-                new Payment { Method = PaymentMethod.Transfer, Amount = 60m, Reference = "SPEI-123" }
-            ], "Completar con transferencia");
+            var paid = await checkout.PayTotalAsync(order.Id, PaymentMethod.Card);
 
             Assert.Equal(OrderStatus.Paid, paid.Status);
             Assert.Equal(0m, paid.BalanceDue);
-            Assert.Equal(2, paid.CurrentCollections.Count);
-            Assert.Equal(4, paid.Payments.Count);
-            Assert.Single(paid.Payments, x => x.Kind == PaymentKind.Reversal);
+            var payment = Assert.Single(paid.CurrentCollections);
+            Assert.Equal(PaymentMethod.Card, payment.Method);
+            Assert.Equal(100m, payment.Amount);
         }
         finally
         {

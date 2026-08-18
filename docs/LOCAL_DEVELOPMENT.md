@@ -83,8 +83,8 @@ La primera ejecución:
 
 Para detener la aplicación desde la terminal use `Ctrl+C` o cierre su ventana. Para
 el flujo funcional básico, agregue productos y guarde la orden. Después, abra
-**Historial** para capturar el desglose de pagos en efectivo, transferencia o tarjeta;
-las órdenes abiertas permiten pagos parciales y se marcan pagadas al cubrir el total.
+**Historial** para liquidar cada orden con pago total en efectivo o tarjeta;
+no se permiten pagos parciales ni pagos divididos.
 
 ## 6. Archivos locales y permisos
 

@@ -40,7 +40,7 @@ public sealed class OperationalHardeningTests
     }
 
     [Fact]
-    public async Task Split_payment_edit_appends_reversal_audit_instead_of_deleting()
+    public async Task Split_payment_is_rejected()
     {
         var path = NewPath();
         try
@@ -49,18 +49,12 @@ public sealed class OperationalHardeningTests
             var orders = new OrderRepository(new TestFactory(options));
             var order = await orders.SaveOrderAsync(Draft(employee, product));
             var checkout = new CheckoutService(orders);
-            await checkout.ReplacePaymentsAsync(order.Id, [new Payment { Method = PaymentMethod.Cash, Amount = 40m }], "Anticipo");
-            var paid = await checkout.ReplacePaymentsAsync(order.Id,
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => checkout.ReplacePaymentsAsync(order.Id,
             [
                 new Payment { Method = PaymentMethod.Cash, Amount = 40m },
                 new Payment { Method = PaymentMethod.Card, Amount = 60m }
-            ], "Completar pago");
-
-            Assert.True(paid.IsFullyPaid);
-            Assert.Equal(4, paid.Payments.Count);
-            var reversal = Assert.Single(paid.Payments, x => x.Kind == PaymentKind.Reversal);
-            Assert.Equal("Completar pago", reversal.Reason);
-            Assert.Equal(2, paid.CurrentCollections.Count);
+            ], "Pago dividido"));
         }
         finally { Delete(path); }
     }

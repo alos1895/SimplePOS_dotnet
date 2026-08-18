@@ -97,13 +97,13 @@ public sealed class OrderRepository(IDbContextFactory<CafePosDbContext> factory)
         var order = await db.Orders.Include(x => x.Items).Include(x => x.Payments)
             .SingleOrDefaultAsync(x => x.Id == orderId, ct) ?? throw new InvalidOperationException("Orden no encontrada.");
         if (order.Status != OrderStatus.Open)
-            throw new InvalidOperationException("Solo se puede modificar el desglose de una orden abierta.");
+            throw new InvalidOperationException("Solo se puede pagar una orden abierta.");
         if (order.CashOnDelivery && order.DeliveryStatus != DeliveryStatus.Delivered)
             throw new InvalidOperationException("El pago contra entrega no puede cobrarse antes de la entrega.");
         if (order.CurrentCollections.Count > 0 && string.IsNullOrWhiteSpace(reason))
             throw new InvalidOperationException("Escriba el motivo del ajuste de pagos.");
 
-        OrderRules.ValidatePaymentBreakdown(order, payments);
+        OrderRules.ValidateFullPayment(order, payments);
         var actor = employeeId == Guid.Empty ? order.EmployeeId : employeeId;
         var now = DateTime.UtcNow;
         var businessDate = BusinessDate.FromUtc(now);
