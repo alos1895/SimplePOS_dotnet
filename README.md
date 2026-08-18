@@ -112,4 +112,7 @@ respaldos están fuera de la carpeta de instalación, por lo que no se reemplaza
 ## Alcance pendiente
 
 Firma de código del ejecutable y del instalador, e interfaz de ajustes completa.
-Impresión, impresoras y conexiones de impresora quedan fuera del alcance por decisión del proyecto.
+La impresión térmica USB está disponible en Windows para impresoras instaladas compatibles con
+ESC/POS. En **Admin** se asignan por separado las impresoras de cocina y cliente, se activa la
+impresión automática y, desde **Historial**, se puede reimprimir cualquiera de los dos tickets.
+Impresoras de red y Bluetooth continúan fuera del alcance.
