@@ -90,7 +90,9 @@ public interface IUpdateInstaller
 }
 
 public sealed record UpdateInfo(Version Version, Uri DownloadUri, string FileName);
-public sealed record AppSettings(string StoreName = "CafePOS", string Currency = "MXN", int RegisterNumber = 1,
+public sealed record AppSettings(string StoreName = "Gloria Café", string Currency = "MXN", int RegisterNumber = 1,
     string? GitHubRepository = "alos1895/SimplePOS_dotnet", bool CheckUpdates = true,
+    string PrinterName = "",
+    // Se conservan para migrar configuraciones creadas antes de usar una sola impresora.
     string KitchenPrinter = "", string CustomerPrinter = "",
     bool AutoPrintKitchen = false, bool AutoPrintCustomer = false);
