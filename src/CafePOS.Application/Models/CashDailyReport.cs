@@ -8,7 +8,6 @@ public sealed record CashDailyReport(
     int Orders,
     decimal OutstandingOrders,
     decimal CashOrders,
-    decimal TransferOrders,
     decimal CardOrders,
     decimal DeliveryRevenue,
     decimal ManualIncome,
@@ -17,5 +16,5 @@ public sealed record CashDailyReport(
     decimal TotalInCaja,
     IReadOnlyList<CategorySales> CategorySales)
 {
-    public static CashDailyReport Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, []);
+    public static CashDailyReport Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, 0, []);
 }

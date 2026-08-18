@@ -35,8 +35,6 @@ public partial class MainViewModel(
     public ObservableCollection<DeliveryOptionItem> DeliveryOptions { get; } = [];
     public ObservableCollection<Order> History { get; } = [];
     public ObservableCollection<OrderItem> SelectedOrderItems { get; } = [];
-    public ObservableCollection<Payment> PaymentBreakdown { get; } = [];
-    public ObservableCollection<Payment> PaymentAudit { get; } = [];
     public ObservableCollection<ManualTransaction> ManualTransactions { get; } = [];
     public ObservableCollection<AdminProductItem> AdminProducts { get; } = [];
     public ObservableCollection<AdminDeliveryOptionItem> AdminDeliveryOptions { get; } = [];
@@ -47,8 +45,6 @@ public partial class MainViewModel(
         Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory>(x, CategoryLabel(x))).ToList();
     public IReadOnlyList<NamedOption<DeliveryType>> DeliveryTypes { get; } =
         Enum.GetValues<DeliveryType>().Select(x => new NamedOption<DeliveryType>(x, DeliveryLabel(x))).ToList();
-    public IReadOnlyList<NamedOption<PaymentMethod>> PaymentMethods { get; } =
-        Enum.GetValues<PaymentMethod>().Select(x => new NamedOption<PaymentMethod>(x, PaymentLabel(x))).ToList();
     public IReadOnlyList<NamedOption<InventoryMovementType>> AdjustmentTypes { get; } =
     [
         new(InventoryMovementType.Incoming, "Entrada / proveedor"),
@@ -76,11 +72,6 @@ public partial class MainViewModel(
     [ObservableProperty] private string historyToText = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     [ObservableProperty] private Order? selectedHistoryOrder;
     [ObservableProperty] private string cancellationReason = "";
-    [ObservableProperty] private Payment? selectedPayment;
-    [ObservableProperty] private NamedOption<PaymentMethod>? selectedPaymentMethod;
-    [ObservableProperty] private decimal paymentAmount;
-    [ObservableProperty] private string paymentReference = "";
-    [ObservableProperty] private string paymentAdjustmentReason = "";
 
     [ObservableProperty] private string manualTransactionConcept = "";
     [ObservableProperty] private decimal manualTransactionAmount;
@@ -144,7 +135,6 @@ public partial class MainViewModel(
         DeliveryOptions.Clear();
         foreach (var option in await catalog.GetDeliveryOptionsAsync()) DeliveryOptions.Add(option);
         SelectedDeliveryOption = DeliveryOptions.FirstOrDefault();
-        SelectedPaymentMethod = PaymentMethods.First();
         SelectedManualTransactionType = ManualTransactionTypes.First();
         SelectedAdminProductCategory = ProductCategories.First();
         SelectedAdminDeliveryType = DeliveryTypes.First();
@@ -223,7 +213,7 @@ public partial class MainViewModel(
             await RefreshCatalogAsync();
             await LoadHistoryAsync(order.Id);
             await RefreshCashReport();
-            StatusMessage = $"Orden #{number} guardada; capture su desglose de pago en Historial.";
+            StatusMessage = $"Orden #{number} guardada; seleccione efectivo o tarjeta para liquidarla.";
         }
         catch (Exception ex)
         {
@@ -279,105 +269,20 @@ public partial class MainViewModel(
     }
 
     [RelayCommand]
-    private async Task AddPayment()
-    {
-        try
-        {
-            EnsureOpenOrderForPayment();
-            if (SelectedPaymentMethod is null) throw new InvalidOperationException("Seleccione un método de pago.");
-            PaymentBreakdown.Add(new Payment
-            {
-                Method = SelectedPaymentMethod.Value,
-                Amount = PaymentAmount,
-                Reference = PaymentReference,
-                CreatedAt = DateTime.UtcNow
-            });
-            await CommitPaymentBreakdownAsync();
-            ClearPaymentEditor();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
+    private Task PayTotalCash() => PayTotalAsync(PaymentMethod.Cash);
 
     [RelayCommand]
-    private async Task UpdatePayment()
-    {
-        try
-        {
-            EnsureOpenOrderForPayment();
-            if (SelectedPayment is null || SelectedPaymentMethod is null)
-                throw new InvalidOperationException("Seleccione un pago para editar.");
-            var index = PaymentBreakdown.IndexOf(SelectedPayment);
-            if (index < 0) throw new InvalidOperationException("Pago no encontrado.");
-            PaymentBreakdown[index] = new Payment
-            {
-                Id = SelectedPayment.Id,
-                Method = SelectedPaymentMethod.Value,
-                Amount = PaymentAmount,
-                Reference = PaymentReference,
-                CreatedAt = SelectedPayment.CreatedAt
-            };
-            await CommitPaymentBreakdownAsync();
-            ClearPaymentEditor();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
+    private Task PayTotalCard() => PayTotalAsync(PaymentMethod.Card);
 
-    [RelayCommand]
-    private async Task ReplacePaymentBreakdown()
+    private async Task PayTotalAsync(PaymentMethod method)
     {
         try
         {
             EnsureOpenOrderForPayment();
-            if (SelectedPaymentMethod is null) throw new InvalidOperationException("Seleccione un método de pago.");
-            PaymentBreakdown.Clear();
-            PaymentBreakdown.Add(new Payment
-            {
-                Method = SelectedPaymentMethod.Value,
-                Amount = PaymentAmount,
-                Reference = PaymentReference,
-                CreatedAt = DateTime.UtcNow
-            });
-            await CommitPaymentBreakdownAsync();
-            ClearPaymentEditor();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
-
-    [RelayCommand]
-    private async Task RemovePayment()
-    {
-        try
-        {
-            EnsureOpenOrderForPayment();
-            if (SelectedPayment is null) throw new InvalidOperationException("Seleccione un pago para eliminar.");
-            PaymentBreakdown.Remove(SelectedPayment);
-            await CommitPaymentBreakdownAsync();
-            ClearPaymentEditor();
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
-
-    [RelayCommand]
-    private async Task ClearPaymentBreakdown()
-    {
-        try
-        {
-            EnsureOpenOrderForPayment();
-            PaymentBreakdown.Clear();
-            await CommitPaymentBreakdownAsync();
-            ClearPaymentEditor();
+            var order = await checkout.PayTotalAsync(SelectedHistoryOrder!.Id, method);
+            await LoadHistoryAsync(order.Id);
+            await RefreshCashReport();
+            StatusMessage = $"Orden #{order.DailyNumber} liquidada con {PaymentLabel(method).ToLowerInvariant()}.";
         }
         catch (Exception ex)
         {
@@ -680,28 +585,15 @@ public partial class MainViewModel(
     partial void OnSelectedHistoryOrderChanged(Order? value)
     {
         SelectedOrderItems.Clear();
-        PaymentBreakdown.Clear();
-        PaymentAudit.Clear();
         if (value is not null)
         {
             foreach (var item in value.Items) SelectedOrderItems.Add(item);
-            foreach (var payment in value.CurrentCollections) PaymentBreakdown.Add(payment);
-            foreach (var payment in value.Payments.OrderBy(x => x.CreatedAt)) PaymentAudit.Add(payment);
         }
-        ClearPaymentEditor();
         OnPropertyChanged(nameof(SelectedOrderTitle));
         OnPropertyChanged(nameof(SelectedOrderSummary));
         OnPropertyChanged(nameof(SelectedPaymentBalance));
         OnPropertyChanged(nameof(CanEditSelectedOrder));
         OnPropertyChanged(nameof(CanCancelSelectedOrder));
-    }
-
-    partial void OnSelectedPaymentChanged(Payment? value)
-    {
-        if (value is null) return;
-        SelectedPaymentMethod = PaymentMethods.Single(x => x.Value == value.Method);
-        PaymentAmount = value.Amount;
-        PaymentReference = value.Reference ?? "";
     }
 
     partial void OnSelectedDeliveryOptionChanged(DeliveryOptionItem? value)
@@ -769,31 +661,10 @@ public partial class MainViewModel(
         }
     }
 
-    private async Task CommitPaymentBreakdownAsync()
-    {
-        if (SelectedHistoryOrder is null) throw new InvalidOperationException("Seleccione una orden.");
-        var order = await checkout.ReplacePaymentsAsync(
-            SelectedHistoryOrder.Id, PaymentBreakdown.ToList(), PaymentAdjustmentReason);
-        await LoadHistoryAsync(order.Id);
-        await RefreshCashReport();
-        StatusMessage = order.Status == OrderStatus.Paid
-            ? $"Orden #{order.DailyNumber} liquidada."
-            : $"Desglose guardado. Saldo pendiente: {order.BalanceDue:C}.";
-    }
-
     private void EnsureOpenOrderForPayment()
     {
         if (SelectedHistoryOrder?.Status != OrderStatus.Open)
             throw new InvalidOperationException("Seleccione una orden abierta.");
-    }
-
-    private void ClearPaymentEditor()
-    {
-        SelectedPayment = null;
-        PaymentAmount = 0;
-        PaymentReference = "";
-        PaymentAdjustmentReason = "";
-        SelectedPaymentMethod ??= PaymentMethods.FirstOrDefault();
     }
 
     private async Task RefreshManualTransactions()
@@ -891,7 +762,6 @@ public partial class MainViewModel(
     private static string PaymentLabel(PaymentMethod method) => method switch
     {
         PaymentMethod.Cash => "Efectivo",
-        PaymentMethod.Transfer => "Transferencia",
         _ => "Tarjeta"
     };
 }

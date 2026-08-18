@@ -6,6 +6,19 @@ namespace CafePOS.Application.Services;
 
 public sealed class CheckoutService(IOrderRepository orders, ICurrentUserContext? user = null)
 {
+    public Task<Order> PayTotalAsync(Guid orderId, Domain.Enums.PaymentMethod method, CancellationToken ct = default)
+    {
+        if (method is not (Domain.Enums.PaymentMethod.Cash or Domain.Enums.PaymentMethod.Card))
+            throw new InvalidOperationException("Solo se admite pago total en efectivo o tarjeta.");
+        return PayTotalCoreAsync(orderId, method, ct);
+    }
+
+    private async Task<Order> PayTotalCoreAsync(Guid orderId, Domain.Enums.PaymentMethod method, CancellationToken ct)
+    {
+        var order = await orders.GetOrderAsync(orderId, ct) ?? throw new InvalidOperationException("Orden no encontrada.");
+        return await ReplacePaymentsAsync(orderId, [new Payment { Method = method, Amount = order.Total }], "Pago total", ct);
+    }
+
     public async Task<Order> ReplacePaymentsAsync(
         Guid orderId,
         IReadOnlyList<Payment> payments,
@@ -14,7 +27,7 @@ public sealed class CheckoutService(IOrderRepository orders, ICurrentUserContext
     {
         var order = await orders.GetOrderAsync(orderId, ct) ?? throw new InvalidOperationException("Orden no encontrada.");
         if (order.Status != Domain.Enums.OrderStatus.Open)
-            throw new InvalidOperationException("Solo se puede modificar el desglose de una orden abierta.");
+            throw new InvalidOperationException("Solo se puede pagar una orden abierta.");
         if (order.CashOnDelivery && order.DeliveryStatus != Domain.Enums.DeliveryStatus.Delivered)
             throw new InvalidOperationException("El efectivo contra entrega solo se registra cuando la entrega fue marcada como entregada.");
         if (order.CurrentCollections.Count > 0 && string.IsNullOrWhiteSpace(reason))
@@ -29,7 +42,7 @@ public sealed class CheckoutService(IOrderRepository orders, ICurrentUserContext
             CreatedAt = DateTime.UtcNow,
             EmployeeId = user?.Current.EmployeeId ?? order.EmployeeId
         }).ToList();
-        OrderRules.ValidatePaymentBreakdown(order, normalized);
+        OrderRules.ValidateFullPayment(order, normalized);
         return await orders.ReplacePaymentsAsync(
             orderId,
             normalized,

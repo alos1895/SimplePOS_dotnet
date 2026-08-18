@@ -9,11 +9,11 @@ namespace CafePOS.Tests;
 public sealed class CashReportServiceTests
 {
     [Fact]
-    public async Task Daily_report_uses_split_payments_and_excludes_cancelled_orders()
+    public async Task Daily_report_uses_full_payments_and_excludes_cancelled_orders()
     {
         var day = new DateTime(2026, 8, 13, 0, 0, 0, DateTimeKind.Utc);
         var paidOrder = Order(day.AddHours(10), OrderStatus.Paid, 100m,
-            [new Payment { Method = PaymentMethod.Cash, Amount = 40m, BusinessDate = "2026-08-13" }, new Payment { Method = PaymentMethod.Card, Amount = 60m, BusinessDate = "2026-08-13" }]);
+            [new Payment { Method = PaymentMethod.Cash, Amount = 100m, BusinessDate = "2026-08-13" }]);
         var openOrder = Order(day.AddHours(11), OrderStatus.Open, 50m, []);
         var cancelled = Order(day.AddHours(12), OrderStatus.Cancelled, 80m,
         [
@@ -32,9 +32,9 @@ public sealed class CashReportServiceTests
 
         Assert.Equal(2, report.Orders);
         Assert.Equal(50m, report.OutstandingOrders);
-        Assert.Equal(40m, report.CashOrders);
-        Assert.Equal(60m, report.CardOrders);
-        Assert.Equal(65m, report.TotalCash);
+        Assert.Equal(100m, report.CashOrders);
+        Assert.Equal(0m, report.CardOrders);
+        Assert.Equal(125m, report.TotalCash);
         Assert.Equal(125m, report.TotalInCaja);
         Assert.Single(report.CategorySales);
     }

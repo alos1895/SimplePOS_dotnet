@@ -8,16 +8,12 @@ namespace CafePOS.Tests;
 public sealed class DomainRulesTests
 {
     [Fact]
-    public void Split_payment_breakdown_marks_order_paid_at_exact_total()
+    public void Full_cash_payment_marks_order_paid_at_exact_total()
     {
         var order = OrderWithTotal(100m);
-        var payments = new[]
-        {
-            new Payment { Method = PaymentMethod.Cash, Amount = 40m },
-            new Payment { Method = PaymentMethod.Card, Amount = 60m }
-        };
+        var payments = new[] { new Payment { Method = PaymentMethod.Cash, Amount = 100m } };
 
-        OrderRules.ValidatePaymentBreakdown(order, payments);
+        OrderRules.ValidateFullPayment(order, payments);
         order.Payments.AddRange(payments);
 
         Assert.True(order.IsFullyPaid);
@@ -25,10 +21,10 @@ public sealed class DomainRulesTests
     }
 
     [Fact]
-    public void Payment_breakdown_rejects_total_above_order_balance()
+    public void Full_payment_rejects_an_amount_different_from_order_total()
     {
         var order = OrderWithTotal(100m);
-        Assert.Throws<InvalidOperationException>(() => OrderRules.ValidatePaymentBreakdown(order,
+        Assert.Throws<InvalidOperationException>(() => OrderRules.ValidateFullPayment(order,
             [new Payment { Method = PaymentMethod.Cash, Amount = 100.01m }]));
     }
 

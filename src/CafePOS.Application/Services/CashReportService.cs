@@ -17,7 +17,6 @@ public sealed class CashReportService(IOrderRepository orders, IManualTransactio
         var manualIncome = dailyTransactions.Where(x => x.Type == ManualTransactionType.Income).Sum(x => x.Amount);
         var manualExpenses = dailyTransactions.Where(x => x.Type == ManualTransactionType.Expense).Sum(x => x.Amount);
         var cash = payments.Where(x => x.Method == PaymentMethod.Cash).Sum(x => x.NetAmount);
-        var transfer = payments.Where(x => x.Method == PaymentMethod.Transfer).Sum(x => x.NetAmount);
         var card = payments.Where(x => x.Method == PaymentMethod.Card).Sum(x => x.NetAmount);
         var categorySales = dailyOrders.SelectMany(x => x.Items)
             .GroupBy(x => x.Category)
@@ -29,13 +28,12 @@ public sealed class CashReportService(IOrderRepository orders, IManualTransactio
             dailyOrders.Count,
             dailyOrders.Where(x => x.Status == OrderStatus.Open).Sum(x => x.BalanceDue),
             cash,
-            transfer,
             card,
             dailyOrders.Sum(x => x.DeliveryFee),
             manualIncome,
             manualExpenses,
             cash + manualIncome - manualExpenses,
-            cash + transfer + card + manualIncome - manualExpenses,
+            cash + card + manualIncome - manualExpenses,
             categorySales);
     }
 }

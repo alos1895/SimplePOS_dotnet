@@ -26,7 +26,7 @@ instalado por un proceso externo.
 | Backup premigración/manual/rotación | Cumple base | Copia consistente mediante API de backup SQLite y retención de 30; backup diario aún es futuro. |
 | Productos e inventario | Cumple | CRUD genérico por categoría, estado activo, existencias, alertas, producción/ajustes y consumo/devolución transaccionales. |
 | Crear/modificar orden | Cumple | Carrito con cantidad, comentarios, nombre/teléfono y snapshots de nombre, categoría y precio. |
-| Pagos divididos | Cumple | Agregar, editar, reemplazar, quitar y limpiar efectivo/transferencia/tarjeta en órdenes abiertas; estado y saldo se recalculan. |
+| Pago de órdenes | Cumple | Liquidación total con un solo cobro en efectivo o tarjeta; no se admiten pagos parciales ni divididos. |
 | Entregas | Cumple | CRUD de opción, tipo Pickup/Walking/Delivery, tarifa, estado activo y snapshot en orden. |
 | Caja, historial y movimientos | Cumple | Reporte por método/categoría, búsqueda por rango, cancelación con devolución de existencias y movimientos manuales. |
 | Métricas | Cumple | Comparación contra periodo anterior, rankings de categorías, alertas de bajo inventario y señales de producción/ajuste/consumo. |
@@ -38,7 +38,7 @@ instalado por un proceso externo.
 
 ## Reglas de Comaleña conservadas
 
-Se conservaron pagos divididos, snapshot de artículos, folio diario, comentarios,
+Se simplificaron los cobros a pago total en efectivo o tarjeta y se conservaron snapshot de artículos, folio diario, comentarios,
 historial por rango, separación de movimientos manuales y ventas, y cancelación auditable. Se mejoró el origen mediante importes `decimal` almacenados como centavos,
 pagos relacionales y sesión durable de caja. El análisis detallado y el mapeo de
 nombres reales permanece en `COMALENA_ANALYSIS.md`.
