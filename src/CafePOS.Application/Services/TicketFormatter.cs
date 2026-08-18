@@ -14,6 +14,7 @@ public sealed class TicketFormatter(ISettingsService settings)
     public string Kitchen(Order order)
     {
         var text = new StringBuilder();
+        Center(text, settings.Current.StoreName);
         Center(text, "COMANDA COCINA");
         Center(text, $"ORDEN #{order.DailyNumber}");
         Line(text);

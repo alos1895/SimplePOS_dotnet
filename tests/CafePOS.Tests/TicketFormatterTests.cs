@@ -15,6 +15,7 @@ public sealed class TicketFormatterTests
         var ticket = formatter.Kitchen(CreateOrder());
 
         Assert.Contains("COMANDA COCINA", ticket);
+        Assert.Contains("Gloria Café", ticket);
         Assert.Contains("ORDEN #18", ticket);
         Assert.Contains("2 x Latte", ticket);
         Assert.Contains("Sin azúcar", ticket);
@@ -28,7 +29,7 @@ public sealed class TicketFormatterTests
         var formatter = new TicketFormatter(new TestSettings());
         var ticket = formatter.Customer(CreateOrder());
 
-        Assert.Contains("Café Prueba", ticket);
+        Assert.Contains("Gloria Café", ticket);
         Assert.Contains("TICKET DE VENTA", ticket);
         Assert.Contains("TOTAL:", ticket);
         Assert.Contains("MXN 90.00", ticket);
@@ -49,7 +50,7 @@ public sealed class TicketFormatterTests
 
     private sealed class TestSettings : ISettingsService
     {
-        public AppSettings Current { get; } = new(StoreName: "Café Prueba");
+        public AppSettings Current { get; } = new();
         public Task SaveAsync(AppSettings settings, CancellationToken ct = default) => Task.CompletedTask;
     }
 }

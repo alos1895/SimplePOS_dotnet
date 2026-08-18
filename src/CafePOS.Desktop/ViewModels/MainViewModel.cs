@@ -500,7 +500,7 @@ public partial class MainViewModel(
             foreach (var name in await printer.GetInstalledPrintersAsync()) InstalledPrinters.Add(name);
             StatusMessage = printer.IsSupported
                 ? $"Impresoras detectadas: {InstalledPrinters.Count}."
-                : "Las impresoras USB se detectan al ejecutar CafePOS en Windows.";
+                : "Las impresoras USB se detectan al ejecutar Gloria Café en Windows.";
         }
         catch (Exception ex) { StatusMessage = $"No se pudieron consultar las impresoras: {ex.Message}"; }
     }
@@ -542,7 +542,7 @@ public partial class MainViewModel(
         try
         {
             var kind = kitchen ? "Cocina" : "Cliente";
-            await printer.PrintAsync(SelectedPrinter ?? "", $"CafePOS {kind} #{order.DailyNumber}",
+            await printer.PrintAsync(SelectedPrinter ?? "", $"{settings.Current.StoreName} {kind} #{order.DailyNumber}",
                 kitchen ? tickets.Kitchen(order) : tickets.Customer(order));
             return $" Impresión de {kind.ToLowerInvariant()} enviada.";
         }

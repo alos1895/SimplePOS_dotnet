@@ -4,13 +4,13 @@
         xmlns:models="using:CafePOS.Application.Models"
         x:Class="CafePOS.Desktop.Views.MainWindow"
         x:DataType="vm:MainViewModel"
-        Title="CafePOS" Width="1440" Height="860" MinWidth="1180" MinHeight="700"
+        Title="Gloria Café · Punto de venta" Width="1440" Height="860" MinWidth="1180" MinHeight="700"
         WindowStartupLocation="CenterScreen">
  <Grid RowDefinitions="76,*" Background="#F4F6F5">
   <Border Background="#18352B" Padding="28,0">
    <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
     <Border Width="38" Height="38" Background="#DFAF4D" CornerRadius="19"><TextBlock Text="C" FontSize="22" FontWeight="Bold" Foreground="#18352B" HorizontalAlignment="Center" VerticalAlignment="Center"/></Border>
-    <StackPanel><TextBlock Text="CafePOS" FontSize="24" FontWeight="Bold" Foreground="White"/><TextBlock Text="Punto de venta para cafetería" FontSize="12" Foreground="#B8D2C3"/><TextBlock Text="{Binding CurrentUserRole}" FontSize="11" Foreground="#DFAF4D"/></StackPanel>
+    <StackPanel><TextBlock Text="Gloria Café" FontSize="24" FontWeight="Bold" Foreground="White"/><TextBlock Text="Punto de venta" FontSize="12" Foreground="#B8D2C3"/><TextBlock Text="{Binding CurrentUserRole}" FontSize="11" Foreground="#DFAF4D"/></StackPanel>
     <Button Classes="secondary" Content="Actualizar ahora" Command="{Binding InstallUpdateCommand}" IsVisible="{Binding HasAvailableUpdate}" Margin="18,0,0,0" VerticalAlignment="Center"/>
    </StackPanel>
   </Border>

@@ -1,4 +1,4 @@
-# CafePOS
+# Gloria Café · Punto de venta
 
 > Proyecto nuevo e independiente. Todo el código, documentación, pruebas y archivos de distribución de CafePOS viven dentro de esta carpeta; el proyecto Android Comaleña permanece separado.
 
