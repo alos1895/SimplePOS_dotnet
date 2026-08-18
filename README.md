@@ -68,12 +68,11 @@ desarrollo explícitos, después de verificar el respaldo, puede usarse
 `CAFEPOS_ALLOW_DESTRUCTIVE_RESET=true`.
 
 El flujo operativo permite crear una orden con productos de café, bebidas, comida,
-postres o extras; la existencia se descuenta de forma transaccional. Capture nombre
+postres o extras; todos los productos activos se pueden vender sin limitar cantidades. Capture nombre
 y teléfono del cliente, seleccione la opción de entrega y guarde la orden. Las entregas
 exigen teléfono normalizado y dirección, y admiten efectivo contra entrega. Los cobros,
 ajustes de cobro, reembolsos de cancelación y reversas
-manuales son registros auditables: no se eliminan. **Stock** registra entradas,
-conteos, merma y correcciones con motivo, fecha, actor y proveedor/referencia.
+manuales son registros auditables: no se eliminan.
 **Indicadores** separa facturado, cobrado y pendiente. Las funciones administrativas
 se muestran solo al rol Administrador del alcance local actual.
 

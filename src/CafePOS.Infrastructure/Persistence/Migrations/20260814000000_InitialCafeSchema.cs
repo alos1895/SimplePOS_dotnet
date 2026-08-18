@@ -21,8 +21,6 @@ public sealed class InitialCafeSchema : Migration
                 Name TEXT NOT NULL,
                 Category INTEGER NOT NULL,
                 Price INTEGER NOT NULL,
-                StockQuantity INTEGER NOT NULL CHECK (StockQuantity >= 0),
-                LowStockThreshold INTEGER NOT NULL CHECK (LowStockThreshold >= 0),
                 IsActive INTEGER NOT NULL,
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL
@@ -92,22 +90,6 @@ public sealed class InitialCafeSchema : Migration
             CREATE INDEX IX_Payments_OrderId ON Payments(OrderId);
             CREATE INDEX IX_Payments_BusinessDate ON Payments(BusinessDate);
             CREATE INDEX IX_Payments_ReversesPaymentId ON Payments(ReversesPaymentId);
-            CREATE TABLE InventoryMovements (
-                Id TEXT NOT NULL PRIMARY KEY,
-                ProductId TEXT NOT NULL,
-                OrderId TEXT NULL,
-                EmployeeId TEXT NOT NULL,
-                BusinessDate TEXT NOT NULL,
-                Type INTEGER NOT NULL,
-                QuantityDelta INTEGER NOT NULL,
-                Reason TEXT NOT NULL,
-                Supplier TEXT NULL,
-                Reference TEXT NULL,
-                OccurredAt TEXT NOT NULL,
-                FOREIGN KEY(ProductId) REFERENCES Products(Id) ON DELETE RESTRICT
-            );
-            CREATE INDEX IX_InventoryMovements_BusinessDate_ProductId ON InventoryMovements(BusinessDate, ProductId);
-            CREATE INDEX IX_InventoryMovements_OrderId ON InventoryMovements(OrderId);
             CREATE TABLE ManualTransactions (
                 Id TEXT NOT NULL PRIMARY KEY,
                 Concept TEXT NOT NULL,
@@ -129,7 +111,6 @@ public sealed class InitialCafeSchema : Migration
     {
         migrationBuilder.Sql("""
             DROP TABLE IF EXISTS ManualTransactions;
-            DROP TABLE IF EXISTS InventoryMovements;
             DROP TABLE IF EXISTS Payments;
             DROP TABLE IF EXISTS OrderItems;
             DROP TABLE IF EXISTS Orders;

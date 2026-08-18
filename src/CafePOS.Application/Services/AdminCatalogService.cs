@@ -17,9 +17,7 @@ public sealed class AdminCatalogService(IAdminCatalogRepository catalog, ICurren
         ValidateName(product.Name);
         if (product.Price <= 0) throw new InvalidOperationException("El precio debe ser mayor que cero.");
         ValidateMoney(product.Price, "El precio");
-        if (product.InitialStockQuantity < 0) throw new InvalidOperationException("El inventario inicial no puede ser negativo.");
-        if (product.LowStockThreshold < 0) throw new InvalidOperationException("El nivel de alerta no puede ser negativo.");
-        await catalog.SaveProductAsync(product with { Name = product.Name.Trim() }, user?.Current.EmployeeId ?? Guid.Empty, ct);
+        await catalog.SaveProductAsync(product with { Name = product.Name.Trim() }, ct);
     }
 
     public Task DeactivateProductAsync(Guid id, CancellationToken ct = default)

@@ -7,7 +7,7 @@ sin una prueba de aceptación en el hardware de la cafetería.
 ## Resultado ejecutivo
 
 La migración a cafetería está implementada: solución por capas, Avalonia/MVVM, EF
-Core/SQLite, catálogo genérico, inventario vendible, órdenes con snapshots, pagos
+Core/SQLite, catálogo genérico, órdenes con snapshots, pagos
 divididos, clientes, entregas, caja, movimientos manuales, respaldos y métricas.
 La migración `RebuildCafeSchema` es deliberadamente destructiva: respalda antes de
 aplicarse y elimina el esquema anterior para no conservar conceptos especializados.
@@ -24,12 +24,12 @@ instalado por un proceso externo.
 | EF Core + SQLite + migrations | Cumple | `MigrateAsync`, migración destructiva versionada y sin `EnsureCreated`; hay prueba de creación de esquema. |
 | Ruta persistente por SO | Cumple | ProgramData en Windows, Application Support en macOS y LocalApplicationData en Linux. |
 | Backup premigración/manual/rotación | Cumple base | Copia consistente mediante API de backup SQLite y retención de 30; backup diario aún es futuro. |
-| Productos e inventario | Cumple | CRUD genérico por categoría, estado activo, existencias, alertas, producción/ajustes y consumo/devolución transaccionales. |
+| Productos | Cumple | CRUD genérico por categoría, precio y estado activo; esta primera versión no limita cantidades. |
 | Crear/modificar orden | Cumple | Carrito con cantidad, comentarios, nombre/teléfono y snapshots de nombre, categoría y precio. |
 | Pago de órdenes | Cumple | Liquidación total con un solo cobro en efectivo o tarjeta; no se admiten pagos parciales ni divididos. |
 | Entregas | Cumple | CRUD de opción, tipo Pickup/Walking/Delivery, tarifa, estado activo y snapshot en orden. |
-| Caja, historial y movimientos | Cumple | Reporte por método/categoría, búsqueda por rango, cancelación con devolución de existencias y movimientos manuales. |
-| Métricas | Cumple | Comparación contra periodo anterior, rankings de categorías, alertas de bajo inventario y señales de producción/ajuste/consumo. |
+| Caja, historial y movimientos | Cumple | Reporte por método/categoría, búsqueda por rango, cancelación con reembolso y movimientos manuales. |
+| Métricas | Cumple | Comparación contra periodo anterior, rankings de productos y categorías. |
 | Transacciones | Cumple base | Guardado de orden, consumo/devolución y reemplazo de pagos se realiza en transacciones SQLite. |
 | Configuración y logs persistentes | Cumple base | JSON atómico y Serilog diario fuera del paquete; falta editor completo en UI. |
 | Consulta de GitHub Releases | Parcial | Consulta y descarga a datos persistentes; no instala, valida firma/hash ni reinicia. |

@@ -13,7 +13,7 @@ public sealed class AdminCatalogRepository(IDbContextFactory<CafePosDbContext> f
         await using var db = await factory.CreateDbContextAsync(ct);
         var products = await db.Products.AsNoTracking()
             .OrderBy(x => x.Category).ThenBy(x => x.Name)
-            .Select(x => new AdminProductItem(x.Id, x.Name, x.Category, x.Price, x.StockQuantity, x.LowStockThreshold, x.IsActive))
+            .Select(x => new AdminProductItem(x.Id, x.Name, x.Category, x.Price, x.IsActive))
             .ToListAsync(ct);
         var deliveryOptions = await db.DeliveryOptions.AsNoTracking()
             .OrderBy(x => x.Type).ThenBy(x => x.Name)
@@ -22,10 +22,9 @@ public sealed class AdminCatalogRepository(IDbContextFactory<CafePosDbContext> f
         return new AdminCatalogData(products, deliveryOptions);
     }
 
-    public async Task SaveProductAsync(ProductUpsert input, Guid employeeId, CancellationToken ct = default)
+    public async Task SaveProductAsync(ProductUpsert input, CancellationToken ct = default)
     {
         await using var db = await factory.CreateDbContextAsync(ct);
-        await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var isNew = input.Id is null;
         var product = isNew
             ? new Product { Name = input.Name }
@@ -35,28 +34,11 @@ public sealed class AdminCatalogRepository(IDbContextFactory<CafePosDbContext> f
         product.Name = input.Name;
         product.Category = input.Category;
         product.Price = input.Price;
-        product.LowStockThreshold = input.LowStockThreshold;
         product.IsActive = true;
         product.UpdatedAt = DateTime.UtcNow;
-        if (isNew)
-        {
-            product.StockQuantity = input.InitialStockQuantity;
-            db.Products.Add(product);
-            if (input.InitialStockQuantity > 0)
-            {
-                db.InventoryMovements.Add(new InventoryMovement
-                {
-                    Product = product,
-                    EmployeeId = employeeId,
-                    Type = InventoryMovementType.Incoming,
-                    QuantityDelta = input.InitialStockQuantity,
-                    Reason = "Inventario inicial"
-                });
-            }
-        }
+        if (isNew) db.Products.Add(product);
 
         await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
     }
 
     public async Task DeactivateProductAsync(Guid id, CancellationToken ct = default)

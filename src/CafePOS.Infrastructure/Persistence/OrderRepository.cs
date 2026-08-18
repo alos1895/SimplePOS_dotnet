@@ -175,25 +175,6 @@ public sealed class OrderRepository(IDbContextFactory<CafePosDbContext> factory)
             });
         }
 
-        foreach (var group in order.Items.Where(x => x.ProductId is not null).GroupBy(x => x.ProductId!.Value))
-        {
-            var product = await db.Products.SingleAsync(x => x.Id == group.Key, ct);
-            var quantity = group.Sum(x => x.Quantity);
-            product.StockQuantity += quantity;
-            product.UpdatedAt = now;
-            db.InventoryMovements.Add(new InventoryMovement
-            {
-                ProductId = product.Id,
-                OrderId = order.Id,
-                EmployeeId = actor,
-                BusinessDate = BusinessDate.FromUtc(now),
-                Type = InventoryMovementType.Cancellation,
-                QuantityDelta = quantity,
-                Reason = $"Cancelación de orden #{order.DailyNumber}: {reason.Trim()}",
-                OccurredAt = now
-            });
-        }
-
         order.Status = OrderStatus.Cancelled;
         order.DeliveryStatus = DeliveryStatus.Cancelled;
         order.CancelledAt = now;
@@ -269,19 +250,12 @@ public sealed class OrderRepository(IDbContextFactory<CafePosDbContext> factory)
             .MaxAsync(x => (int?)x.DailyNumber, ct);
         order.DailyNumber = (maxDailyNumber ?? 0) + 1;
 
-        var requests = order.Items.GroupBy(x => x.ProductId!.Value)
-            .Select(x => new { ProductId = x.Key, Quantity = x.Sum(i => i.Quantity) })
-            .ToList();
-        foreach (var request in requests)
+        var productIds = order.Items.Select(x => x.ProductId!.Value).Distinct().ToList();
+        foreach (var productId in productIds)
         {
-            var product = await db.Products.SingleOrDefaultAsync(x => x.Id == request.ProductId, ct)
+            var product = await db.Products.SingleOrDefaultAsync(x => x.Id == productId, ct)
                 ?? throw new InvalidOperationException("Uno de los productos ya no existe.");
             if (!product.IsActive) throw new InvalidOperationException($"{product.Name} ya no está disponible.");
-            if (product.StockQuantity < request.Quantity)
-                throw new InvalidOperationException($"Inventario insuficiente para {product.Name}.");
-
-            product.StockQuantity -= request.Quantity;
-            product.UpdatedAt = now;
             foreach (var item in order.Items.Where(x => x.ProductId == product.Id))
             {
                 item.ProductName = product.Name;
@@ -289,17 +263,6 @@ public sealed class OrderRepository(IDbContextFactory<CafePosDbContext> factory)
                 item.UnitPrice = product.Price;
                 item.Product = null;
             }
-            db.InventoryMovements.Add(new InventoryMovement
-            {
-                ProductId = product.Id,
-                OrderId = order.Id,
-                EmployeeId = order.EmployeeId,
-                BusinessDate = order.BusinessDate,
-                Type = InventoryMovementType.Sale,
-                QuantityDelta = -request.Quantity,
-                Reason = $"Venta orden #{order.DailyNumber}",
-                OccurredAt = now
-            });
         }
     }
 

@@ -20,7 +20,6 @@ public partial class MainViewModel(
     CashReportService cashReportService,
     BusinessMetricsService metricsService,
     AdminCatalogService adminCatalog,
-    InventoryService inventory,
     IBackupService backups,
     ICurrentUserContext currentUser,
     IUpdateService updates,
@@ -38,20 +37,11 @@ public partial class MainViewModel(
     public ObservableCollection<ManualTransaction> ManualTransactions { get; } = [];
     public ObservableCollection<AdminProductItem> AdminProducts { get; } = [];
     public ObservableCollection<AdminDeliveryOptionItem> AdminDeliveryOptions { get; } = [];
-    public ObservableCollection<ProductStockItem> InventoryProducts { get; } = [];
-    public ObservableCollection<InventoryMovementItem> InventoryMovements { get; } = [];
 
     public IReadOnlyList<NamedOption<ProductCategory>> ProductCategories { get; } =
         Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory>(x, CategoryLabel(x))).ToList();
     public IReadOnlyList<NamedOption<DeliveryType>> DeliveryTypes { get; } =
         Enum.GetValues<DeliveryType>().Select(x => new NamedOption<DeliveryType>(x, DeliveryLabel(x))).ToList();
-    public IReadOnlyList<NamedOption<InventoryMovementType>> AdjustmentTypes { get; } =
-    [
-        new(InventoryMovementType.Incoming, "Entrada / proveedor"),
-        new(InventoryMovementType.Count, "Conteo físico"),
-        new(InventoryMovementType.Waste, "Merma"),
-        new(InventoryMovementType.Correction, "Corrección")
-    ];
     public IReadOnlyList<NamedOption<ManualTransactionType>> ManualTransactionTypes { get; } =
     [
         new(ManualTransactionType.Income, "INGRESO"),
@@ -85,21 +75,10 @@ public partial class MainViewModel(
     [ObservableProperty] private string adminProductName = "";
     [ObservableProperty] private NamedOption<ProductCategory>? selectedAdminProductCategory;
     [ObservableProperty] private decimal adminProductPrice;
-    [ObservableProperty] private int adminInitialStock;
-    [ObservableProperty] private int adminLowStockThreshold = 5;
     [ObservableProperty] private Guid? adminEditingDeliveryOptionId;
     [ObservableProperty] private string adminDeliveryName = "";
     [ObservableProperty] private NamedOption<DeliveryType>? selectedAdminDeliveryType;
     [ObservableProperty] private decimal adminDeliveryFee;
-
-    [ObservableProperty] private string inventoryDateText = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-    [ObservableProperty] private ProductStockItem? selectedInventoryProduct;
-    [ObservableProperty] private NamedOption<InventoryMovementType>? selectedAdjustmentType;
-    [ObservableProperty] private int inventoryAdjustmentQuantity;
-    [ObservableProperty] private string inventoryAdjustmentReason = "";
-    [ObservableProperty] private string inventoryAdjustmentNotes = "";
-    [ObservableProperty] private string inventorySupplier = "";
-    [ObservableProperty] private string inventoryReference = "";
 
     [ObservableProperty] private string metricsFromText = DateTime.Today.AddDays(-6).ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
     [ObservableProperty] private string metricsToText = DateTime.Today.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
@@ -111,8 +90,6 @@ public partial class MainViewModel(
     public bool RequiresDeliveryAddress => SelectedDeliveryOption?.Type is DeliveryType.Delivery or DeliveryType.Walking;
     public bool IsAdminHome => AdminPage == AdminPage.Home;
     public bool IsAdminProducts => AdminPage == AdminPage.Products;
-    public bool IsAdminInventory => AdminPage == AdminPage.Inventory;
-    public bool IsAdminMetrics => AdminPage == AdminPage.Metrics;
     public bool IsAdmin => currentUser.Current.Role == EmployeeRole.Admin;
     public string CurrentUserRole => $"{currentUser.Current.DisplayName} · {currentUser.Current.Role}";
     public bool CanEditSelectedOrder => SelectedHistoryOrder?.Status == OrderStatus.Open;
@@ -138,7 +115,6 @@ public partial class MainViewModel(
         SelectedManualTransactionType = ManualTransactionTypes.First();
         SelectedAdminProductCategory = ProductCategories.First();
         SelectedAdminDeliveryType = DeliveryTypes.First();
-        SelectedAdjustmentType = AdjustmentTypes.First();
         RefreshCatalog();
         await RefreshHistory();
         await RefreshManualTransactions();
@@ -159,11 +135,6 @@ public partial class MainViewModel(
     private void AddProduct(CatalogItem product)
     {
         var line = Cart.FirstOrDefault(x => x.Product.Id == product.Id);
-        if ((line?.Quantity ?? 0) >= product.StockQuantity)
-        {
-            StatusMessage = $"No hay más existencias de {product.Name}.";
-            return;
-        }
         if (line is null) Cart.Add(new CartLine(product));
         else line.Quantity++;
         TotalsChanged();
@@ -172,11 +143,6 @@ public partial class MainViewModel(
     [RelayCommand]
     private void Increment(CartLine line)
     {
-        if (line.Quantity >= line.Product.StockQuantity)
-        {
-            StatusMessage = $"No hay más existencias de {line.Product.Name}.";
-            return;
-        }
         line.Quantity++;
         TotalsChanged();
     }
@@ -260,7 +226,7 @@ public partial class MainViewModel(
             await RefreshCatalogAsync();
             await LoadHistoryAsync(cancelled.Id);
             await RefreshCashReport();
-            StatusMessage = $"Orden #{cancelled.DailyNumber} cancelada, inventario devuelto y cobros reembolsados.";
+            StatusMessage = $"Orden #{cancelled.DailyNumber} cancelada y cobros reembolsados.";
         }
         catch (Exception ex)
         {
@@ -337,24 +303,6 @@ public partial class MainViewModel(
 
     [RelayCommand] private void CloseAdminProducts() => AdminPage = AdminPage.Home;
 
-    [RelayCommand]
-    private async Task OpenAdminInventory()
-    {
-        AdminPage = AdminPage.Inventory;
-        await RefreshInventory();
-    }
-
-    [RelayCommand] private void CloseAdminInventory() => AdminPage = AdminPage.Home;
-
-    [RelayCommand]
-    private async Task OpenAdminMetrics()
-    {
-        AdminPage = AdminPage.Metrics;
-        await RefreshMetrics();
-    }
-
-    [RelayCommand] private void CloseAdminMetrics() => AdminPage = AdminPage.Home;
-
     [RelayCommand] private void NewAdminProduct() => BeginNewAdminProduct();
     [RelayCommand] private void NewAdminDeliveryOption() => BeginNewAdminDeliveryOption();
 
@@ -365,8 +313,6 @@ public partial class MainViewModel(
         AdminProductName = product.Name;
         SelectedAdminProductCategory = ProductCategories.Single(x => x.Value == product.Category);
         AdminProductPrice = product.Price;
-        AdminInitialStock = product.StockQuantity;
-        AdminLowStockThreshold = product.LowStockThreshold;
     }
 
     [RelayCommand]
@@ -379,9 +325,7 @@ public partial class MainViewModel(
                 AdminEditingProductId,
                 AdminProductName,
                 SelectedAdminProductCategory.Value,
-                AdminProductPrice,
-                AdminInitialStock,
-                AdminLowStockThreshold));
+                AdminProductPrice));
             await RefreshAdminCatalogAsync();
             await RefreshCatalogAsync();
             BeginNewAdminProduct();
@@ -449,56 +393,6 @@ public partial class MainViewModel(
             await RefreshAdminCatalogAsync();
             await RefreshCatalogAsync();
             StatusMessage = $"{option.Name} desactivada.";
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
-
-    [RelayCommand]
-    private async Task RefreshInventory()
-    {
-        try
-        {
-            var date = ParseDate(InventoryDateText, DateTime.Today);
-            InventoryDateText = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
-            var snapshot = await inventory.GetSnapshotAsync(date);
-            InventoryProducts.Clear();
-            foreach (var product in snapshot.Products) InventoryProducts.Add(product);
-            InventoryMovements.Clear();
-            foreach (var movement in snapshot.Movements) InventoryMovements.Add(movement);
-            SelectedInventoryProduct ??= InventoryProducts.FirstOrDefault(x => x.IsActive);
-        }
-        catch (Exception ex)
-        {
-            StatusMessage = ex.Message;
-        }
-    }
-
-    [RelayCommand]
-    private async Task SaveInventoryAdjustment()
-    {
-        try
-        {
-            if (SelectedInventoryProduct is null || SelectedAdjustmentType is null)
-                throw new InvalidOperationException("Seleccione un producto y tipo de movimiento.");
-            await inventory.AdjustAsync(
-                SelectedInventoryProduct.Id,
-                SelectedAdjustmentType.Value,
-                InventoryAdjustmentQuantity,
-                string.IsNullOrWhiteSpace(InventoryAdjustmentReason) ? InventoryAdjustmentNotes : InventoryAdjustmentReason,
-                InventorySupplier,
-                InventoryReference,
-                ParseDate(InventoryDateText, DateTime.Today));
-            InventoryAdjustmentQuantity = 0;
-            InventoryAdjustmentReason = "";
-            InventoryAdjustmentNotes = "";
-            InventorySupplier = "";
-            InventoryReference = "";
-            await RefreshInventory();
-            await RefreshCatalogAsync();
-            StatusMessage = "Movimiento de inventario guardado.";
         }
         catch (Exception ex)
         {
@@ -608,8 +502,6 @@ public partial class MainViewModel(
     {
         OnPropertyChanged(nameof(IsAdminHome));
         OnPropertyChanged(nameof(IsAdminProducts));
-        OnPropertyChanged(nameof(IsAdminInventory));
-        OnPropertyChanged(nameof(IsAdminMetrics));
     }
 
     private void RefreshCatalog()
@@ -689,8 +581,6 @@ public partial class MainViewModel(
         AdminEditingProductId = null;
         AdminProductName = "";
         AdminProductPrice = 0;
-        AdminInitialStock = 0;
-        AdminLowStockThreshold = 5;
         SelectedAdminProductCategory = ProductCategories.FirstOrDefault();
     }
 

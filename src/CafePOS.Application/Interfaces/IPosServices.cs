@@ -13,18 +13,10 @@ public interface ICatalogRepository
 public interface IAdminCatalogRepository
 {
     Task<AdminCatalogData> GetAsync(CancellationToken ct = default);
-    Task SaveProductAsync(ProductUpsert product, Guid employeeId, CancellationToken ct = default);
+    Task SaveProductAsync(ProductUpsert product, CancellationToken ct = default);
     Task DeactivateProductAsync(Guid id, CancellationToken ct = default);
     Task SaveDeliveryOptionAsync(DeliveryOptionUpsert option, CancellationToken ct = default);
     Task DeactivateDeliveryOptionAsync(Guid id, CancellationToken ct = default);
-}
-
-public interface IInventoryRepository
-{
-    Task<InventorySnapshot> GetSnapshotAsync(DateTime day, CancellationToken ct = default);
-    Task<IReadOnlyList<ProductStockItem>> GetProductStocksAsync(CancellationToken ct = default);
-    Task<IReadOnlyList<InventoryMovementItem>> GetMovementsAsync(DateTime from, DateTime to, CancellationToken ct = default);
-    Task AdjustAsync(StockAdjustment adjustment, CancellationToken ct = default);
 }
 
 public interface IOrderRepository

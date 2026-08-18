@@ -20,9 +20,9 @@ public sealed class CatalogRepository(IDbContextFactory<CafePosDbContext> factor
     {
         await using var db = await factory.CreateDbContextAsync(ct);
         return await db.Products.AsNoTracking()
-            .Where(x => x.IsActive && x.StockQuantity > 0)
+            .Where(x => x.IsActive)
             .OrderBy(x => x.Category).ThenBy(x => x.Name)
-            .Select(x => new CatalogItem(x.Id, x.Name, x.Category, x.Price, x.StockQuantity))
+            .Select(x => new CatalogItem(x.Id, x.Name, x.Category, x.Price))
             .ToListAsync(ct);
     }
 }

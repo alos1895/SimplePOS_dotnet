@@ -7,7 +7,6 @@ namespace CafePOS.Application.Services;
 
 public sealed class BusinessMetricsService(
     IOrderRepository orders,
-    IInventoryRepository inventory,
     ICurrentUserContext? user = null)
 {
     public async Task<BusinessMetrics> GetAsync(DateTime from, DateTime to, CancellationToken ct = default)
@@ -26,8 +25,6 @@ public sealed class BusinessMetricsService(
             .Where(x => x.Status != OrderStatus.Cancelled).ToList();
         var currentPayments = await orders.GetPaymentsAsync(start, end, ct);
         var previousPayments = await orders.GetPaymentsAsync(previousStart, start, ct);
-        var movements = await inventory.GetMovementsAsync(start, end, ct);
-        var stock = await inventory.GetProductStocksAsync(ct);
 
         var invoicedSales = currentOrders.Sum(x => x.Total);
         var previousInvoicedSales = previousOrders.Sum(x => x.Total);
@@ -76,14 +73,7 @@ public sealed class BusinessMetricsService(
             trend,
             topProducts,
             categoryMetrics.OrderByDescending(x => x.Sales).ThenByDescending(x => x.Quantity).ToList(),
-            categoryMetrics.OrderBy(x => x.Sales).ThenBy(x => x.Quantity).ToList(),
-            stock.Where(x => x.IsLowStock).OrderBy(x => x.StockQuantity).ThenBy(x => x.Name).ToList(),
-            new StockSignals(
-                movements.Where(x => x.Type == InventoryMovementType.Incoming).Sum(x => Math.Max(0, x.QuantityDelta)),
-                movements.Where(x => x.Type == InventoryMovementType.Count).Sum(x => x.QuantityDelta),
-                -movements.Where(x => x.Type == InventoryMovementType.Waste).Sum(x => Math.Min(0, x.QuantityDelta)),
-                movements.Where(x => x.Type == InventoryMovementType.Correction).Sum(x => x.QuantityDelta),
-                -movements.Where(x => x.Type == InventoryMovementType.Sale).Sum(x => Math.Min(0, x.QuantityDelta)),
-                movements.Where(x => x.Type == InventoryMovementType.Cancellation).Sum(x => Math.Max(0, x.QuantityDelta))));
+            categoryMetrics.OrderBy(x => x.Sales).ThenBy(x => x.Quantity).ToList());
+
     }
 }
