@@ -31,6 +31,8 @@ public sealed class TicketFormatterTests
         Assert.Contains("Café Prueba", ticket);
         Assert.Contains("TICKET DE VENTA", ticket);
         Assert.Contains("TOTAL:", ticket);
+        Assert.Contains("MXN 90.00", ticket);
+        Assert.DoesNotContain("XDR", ticket);
         Assert.Contains("Pago: Efectivo", ticket);
         Assert.Contains(new string('-', 32), ticket);
     }

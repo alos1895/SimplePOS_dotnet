@@ -49,12 +49,12 @@ public sealed class TicketFormatter(ISettingsService settings)
         foreach (var item in order.Items)
         {
             text.AppendLine($"{item.Quantity} x {item.ProductName}");
-            text.AppendLine(Right(item.LineTotal.ToString("C", CultureInfo.CurrentCulture)));
+            text.AppendLine(Right(Money(item.LineTotal)));
         }
         Line(text);
-        text.AppendLine(Right($"Subtotal: {order.Subtotal.ToString("C", CultureInfo.CurrentCulture)}"));
-        if (order.DeliveryFee != 0) text.AppendLine(Right($"Entrega: {order.DeliveryFee.ToString("C", CultureInfo.CurrentCulture)}"));
-        text.AppendLine(Right($"TOTAL: {order.Total.ToString("C", CultureInfo.CurrentCulture)}"));
+        text.AppendLine(Right($"Subtotal: {Money(order.Subtotal)}"));
+        if (order.DeliveryFee != 0) text.AppendLine(Right($"Entrega: {Money(order.DeliveryFee)}"));
+        text.AppendLine(Right($"TOTAL: {Money(order.Total)}"));
         var payment = order.CurrentCollections.LastOrDefault();
         if (payment is not null) text.AppendLine($"Pago: {(payment.Method == PaymentMethod.Cash ? "Efectivo" : "Tarjeta")}");
         Line(text);
@@ -64,6 +64,7 @@ public sealed class TicketFormatter(ISettingsService settings)
     }
 
     private static DateTime LocalTime(DateTime value) => value.Kind == DateTimeKind.Utc ? value.ToLocalTime() : value;
+    private string Money(decimal value) => $"{settings.Current.Currency} {value.ToString("N2", CultureInfo.InvariantCulture)}";
     private static void Line(StringBuilder text) => text.AppendLine(new string('-', Width));
     private static void Center(StringBuilder text, string value) => text.AppendLine(value.Length >= Width ? value : value.PadLeft((Width + value.Length) / 2));
     private static string Right(string value) => value.Length >= Width ? value : value.PadLeft(Width);
