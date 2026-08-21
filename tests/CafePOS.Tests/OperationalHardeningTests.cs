@@ -183,17 +183,32 @@ public sealed class OperationalHardeningTests
             await using var db = new CafePosDbContext(options);
             Assert.True(await db.Employees.AnyAsync());
             var menu = await db.Products.Where(x => x.IsActive).ToListAsync();
-            Assert.Equal(38, menu.Count);
+            Assert.Equal(52, menu.Count);
             Assert.Contains(menu, x => x.Name == "Panini de jamón con queso manchego + bebida" && x.Price == 149m);
             Assert.Contains(menu, x => x.Name == "Panini de pollo con queso manchego + bebida" && x.Price == 159m);
             Assert.Contains(menu, x => x.Name == "Latte + muffin" && x.Price == 99m);
             Assert.Equal(6, menu.Count(x => x.Name.EndsWith("+ bebida") && x.Name.StartsWith("Croissant")));
             Assert.Equal(6, menu.Count(x => x.Price == 69m));
             Assert.Contains(menu, x => x.Name == "Café americano" && x.Price == 55m && x.Category == ProductCategory.Coffee);
-            Assert.Contains(menu, x => x.Name == "Café latte a las rocas" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.DoesNotContain(menu, x => x.Name == "Café latte a las rocas");
+            Assert.Contains(menu, x => x.Name == "Latte tradicional helado" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.Contains(menu, x => x.Name == "Latte caramel helado" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.Contains(menu, x => x.Name == "Latte moka helado" && x.Price == 75m && x.Category == ProductCategory.Beverages);
+            Assert.Contains(menu, x => x.Name == "Panini de pollo" && x.Price == 109m && x.Category == ProductCategory.Food);
+            Assert.Contains(menu, x => x.Name == "Panini de jamón" && x.Price == 99m && x.Category == ProductCategory.Food);
+            Assert.Contains(menu, x => x.Name == "Alimento de temporada" && x.Price == 109m && x.Category == ProductCategory.Food);
+            Assert.Contains(menu, x => x.Name == "Ensalada" && x.Price == 99m && x.Category == ProductCategory.Food);
+            Assert.Contains(menu, x => x.Name == "Postre 1" && x.Price == 35m && x.Category == ProductCategory.Desserts);
+            Assert.Contains(menu, x => x.Name == "Postre 2" && x.Price == 40m && x.Category == ProductCategory.Desserts);
+            Assert.Contains(menu, x => x.Name == "Postre 3" && x.Price == 45m && x.Category == ProductCategory.Desserts);
+            Assert.Contains(menu, x => x.Name == "Combo de temporada" && x.Price == 149m && x.Category == ProductCategory.Combos);
+            Assert.Contains(menu, x => x.Name == "Panini mixto + bebida" && x.Price == 169m && x.Category == ProductCategory.Combos);
+            Assert.Contains(menu, x => x.Name == "Proteína" && x.Price == 18m && x.Category == ProductCategory.Extras);
+            Assert.Contains(menu, x => x.Name == "Aderezo" && x.Price == 20m && x.Category == ProductCategory.Extras);
+            Assert.Contains(menu, x => x.Name == "Expresso" && x.Price == 18m && x.Category == ProductCategory.Extras);
             Assert.Contains(menu, x => x.Name == "Frapuchino" && x.Price == 78m);
             Assert.Contains(menu, x => x.Name == "Botella de agua 500 ml" && x.Price == 16m);
-            Assert.Equal(11, menu.Count(x => x.Category == ProductCategory.Combos));
+            Assert.Equal(13, menu.Count(x => x.Category == ProductCategory.Combos));
             Assert.All(menu.Where(x => x.Name.Contains("+ bebida") || x.Name.Contains("+ muffin")),
                 product => Assert.Equal(ProductCategory.Combos, product.Category));
         }
@@ -226,7 +241,7 @@ public sealed class OperationalHardeningTests
             await initializer.InitializeAsync();
 
             await using var verification = new CafePosDbContext(options);
-            Assert.Equal(38, await verification.Products.CountAsync(x => x.IsActive));
+            Assert.Equal(52, await verification.Products.CountAsync(x => x.IsActive));
             Assert.False((await verification.Products.SingleAsync(x => x.Name == "Espresso")).IsActive);
             Assert.True(await verification.Products.AnyAsync(x =>
                 x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
@@ -263,7 +278,7 @@ public sealed class OperationalHardeningTests
                 x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Food)).IsActive);
             Assert.True(await verification.Products.AnyAsync(x =>
                 x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
-            Assert.Equal(11, await verification.Products.CountAsync(x =>
+            Assert.Equal(13, await verification.Products.CountAsync(x =>
                 x.Category == ProductCategory.Combos && x.IsActive));
         }
         finally { Delete(path); }

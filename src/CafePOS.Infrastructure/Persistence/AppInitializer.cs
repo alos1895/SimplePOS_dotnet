@@ -64,7 +64,7 @@ public sealed class AppInitializer(
 public static class Seed
 {
     public static readonly Guid DefaultEmployeeId = Guid.Parse("11111111-1111-1111-1111-111111111111");
-    public const string CatalogMarker = "Panini de jamón con queso manchego + bebida";
+    public const string CatalogMarker = "Panini mixto + bebida";
 
     public static IEnumerable<Product> Products() =>
     [
@@ -82,7 +82,9 @@ public static class Seed
         new() { Name = "Matcha caliente", Category = ProductCategory.Coffee, Price = 65m },
         new() { Name = "Chai caliente", Category = ProductCategory.Coffee, Price = 65m },
         new() { Name = "Bebida caliente de temporada", Category = ProductCategory.Coffee, Price = 70m },
-        new() { Name = "Café latte a las rocas", Category = ProductCategory.Beverages, Price = 75m },
+        new() { Name = "Latte tradicional helado", Category = ProductCategory.Beverages, Price = 75m },
+        new() { Name = "Latte caramel helado", Category = ProductCategory.Beverages, Price = 75m },
+        new() { Name = "Latte moka helado", Category = ProductCategory.Beverages, Price = 75m },
         new() { Name = "Tisana helada", Category = ProductCategory.Beverages, Price = 75m },
         new() { Name = "Chocolate helado", Category = ProductCategory.Beverages, Price = 75m },
         new() { Name = "Taro helado", Category = ProductCategory.Beverages, Price = 75m },
@@ -94,6 +96,18 @@ public static class Seed
         new() { Name = "Bebida helada de temporada", Category = ProductCategory.Beverages, Price = 78m },
         new() { Name = "Panini de jamón con queso manchego + bebida", Category = ProductCategory.Combos, Price = 149m },
         new() { Name = "Panini de pollo con queso manchego + bebida", Category = ProductCategory.Combos, Price = 159m },
+        new() { Name = "Panini de pollo", Category = ProductCategory.Food, Price = 109m },
+        new() { Name = "Panini de jamón", Category = ProductCategory.Food, Price = 99m },
+        new() { Name = "Alimento de temporada", Category = ProductCategory.Food, Price = 109m },
+        new() { Name = "Ensalada", Category = ProductCategory.Food, Price = 99m },
+        new() { Name = "Postre 1", Category = ProductCategory.Desserts, Price = 35m },
+        new() { Name = "Postre 2", Category = ProductCategory.Desserts, Price = 40m },
+        new() { Name = "Postre 3", Category = ProductCategory.Desserts, Price = 45m },
+        new() { Name = "Combo de temporada", Category = ProductCategory.Combos, Price = 149m },
+        new() { Name = "Panini mixto + bebida", Category = ProductCategory.Combos, Price = 169m },
+        new() { Name = "Proteína", Category = ProductCategory.Extras, Price = 18m },
+        new() { Name = "Aderezo", Category = ProductCategory.Extras, Price = 20m },
+        new() { Name = "Expresso", Category = ProductCategory.Extras, Price = 18m },
         new() { Name = "Croissant clásico", Category = ProductCategory.Food, Price = 69m },
         new() { Name = "Croissant clásico + bebida", Category = ProductCategory.Combos, Price = 119m },
         new() { Name = "Croissant italiano", Category = ProductCategory.Food, Price = 69m },
