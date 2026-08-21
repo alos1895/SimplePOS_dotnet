@@ -10,13 +10,13 @@ public sealed class InitialDevelopmentSchema : Migration
     protected override void Up(MigrationBuilder migrationBuilder)
     {
         migrationBuilder.Sql("""
-            CREATE TABLE Employees (
+            CREATE TABLE IF NOT EXISTS Employees (
                 Id TEXT NOT NULL PRIMARY KEY,
                 DisplayName TEXT NOT NULL,
                 Role INTEGER NOT NULL,
                 IsActive INTEGER NOT NULL
             );
-            CREATE TABLE Products (
+            CREATE TABLE IF NOT EXISTS Products (
                 Id TEXT NOT NULL PRIMARY KEY,
                 Name TEXT NOT NULL,
                 Category INTEGER NOT NULL,
@@ -25,16 +25,16 @@ public sealed class InitialDevelopmentSchema : Migration
                 CreatedAt TEXT NOT NULL,
                 UpdatedAt TEXT NOT NULL
             );
-            CREATE UNIQUE INDEX IX_Products_Category_Name ON Products(Category, Name);
-            CREATE TABLE DeliveryOptions (
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Products_Category_Name ON Products(Category, Name);
+            CREATE TABLE IF NOT EXISTS DeliveryOptions (
                 Id TEXT NOT NULL PRIMARY KEY,
                 Name TEXT NOT NULL,
                 Type INTEGER NOT NULL,
                 Fee INTEGER NOT NULL,
                 IsActive INTEGER NOT NULL
             );
-            CREATE UNIQUE INDEX IX_DeliveryOptions_Name ON DeliveryOptions(Name);
-            CREATE TABLE Orders (
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_DeliveryOptions_Name ON DeliveryOptions(Name);
+            CREATE TABLE IF NOT EXISTS Orders (
                 Id TEXT NOT NULL PRIMARY KEY,
                 BusinessDate TEXT NOT NULL,
                 DailyNumber INTEGER NOT NULL,
@@ -58,9 +58,9 @@ public sealed class InitialDevelopmentSchema : Migration
                 CancellationReason TEXT NULL,
                 FOREIGN KEY(EmployeeId) REFERENCES Employees(Id)
             );
-            CREATE UNIQUE INDEX IX_Orders_BusinessDate_DailyNumber ON Orders(BusinessDate, DailyNumber);
-            CREATE INDEX IX_Orders_BusinessDate ON Orders(BusinessDate);
-            CREATE TABLE OrderItems (
+            CREATE UNIQUE INDEX IF NOT EXISTS IX_Orders_BusinessDate_DailyNumber ON Orders(BusinessDate, DailyNumber);
+            CREATE INDEX IF NOT EXISTS IX_Orders_BusinessDate ON Orders(BusinessDate);
+            CREATE TABLE IF NOT EXISTS OrderItems (
                 Id TEXT NOT NULL PRIMARY KEY,
                 OrderId TEXT NOT NULL,
                 ProductId TEXT NULL,
@@ -72,8 +72,8 @@ public sealed class InitialDevelopmentSchema : Migration
                 FOREIGN KEY(OrderId) REFERENCES Orders(Id) ON DELETE CASCADE,
                 FOREIGN KEY(ProductId) REFERENCES Products(Id) ON DELETE RESTRICT
             );
-            CREATE INDEX IX_OrderItems_OrderId ON OrderItems(OrderId);
-            CREATE TABLE Payments (
+            CREATE INDEX IF NOT EXISTS IX_OrderItems_OrderId ON OrderItems(OrderId);
+            CREATE TABLE IF NOT EXISTS Payments (
                 Id TEXT NOT NULL PRIMARY KEY,
                 OrderId TEXT NOT NULL,
                 BusinessDate TEXT NOT NULL,
@@ -87,10 +87,10 @@ public sealed class InitialDevelopmentSchema : Migration
                 CreatedAt TEXT NOT NULL,
                 FOREIGN KEY(OrderId) REFERENCES Orders(Id) ON DELETE CASCADE
             );
-            CREATE INDEX IX_Payments_OrderId ON Payments(OrderId);
-            CREATE INDEX IX_Payments_BusinessDate ON Payments(BusinessDate);
-            CREATE INDEX IX_Payments_ReversesPaymentId ON Payments(ReversesPaymentId);
-            CREATE TABLE ManualTransactions (
+            CREATE INDEX IF NOT EXISTS IX_Payments_OrderId ON Payments(OrderId);
+            CREATE INDEX IF NOT EXISTS IX_Payments_BusinessDate ON Payments(BusinessDate);
+            CREATE INDEX IF NOT EXISTS IX_Payments_ReversesPaymentId ON Payments(ReversesPaymentId);
+            CREATE TABLE IF NOT EXISTS ManualTransactions (
                 Id TEXT NOT NULL PRIMARY KEY,
                 Concept TEXT NOT NULL,
                 Amount INTEGER NOT NULL CHECK (Amount > 0),
@@ -102,8 +102,8 @@ public sealed class InitialDevelopmentSchema : Migration
                 Reason TEXT NULL,
                 CreatedAt TEXT NOT NULL
             );
-            CREATE INDEX IX_ManualTransactions_BusinessDate ON ManualTransactions(BusinessDate);
-            CREATE INDEX IX_ManualTransactions_ReversesTransactionId ON ManualTransactions(ReversesTransactionId);
+            CREATE INDEX IF NOT EXISTS IX_ManualTransactions_BusinessDate ON ManualTransactions(BusinessDate);
+            CREATE INDEX IF NOT EXISTS IX_ManualTransactions_ReversesTransactionId ON ManualTransactions(ReversesTransactionId);
             """);
     }
 
