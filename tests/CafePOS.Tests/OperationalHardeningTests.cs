@@ -250,6 +250,73 @@ public sealed class OperationalHardeningTests
     }
 
     [Fact]
+    public async Task Initializer_removes_legacy_stock_quantity_column_before_seeding_products()
+    {
+        var path = NewPath();
+        try
+        {
+            await using (var connection = new SqliteConnection($"Data Source={path};Pooling=False"))
+            {
+                await connection.OpenAsync();
+                await using var command = connection.CreateCommand();
+                command.CommandText = """
+                    CREATE TABLE "__EFMigrationsHistory" (
+                        "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
+                        "ProductVersion" TEXT NOT NULL
+                    );
+                    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
+                    VALUES ('20260814000000_InitialCafeSchema', '10.0.0');
+                    CREATE TABLE Employees (
+                        Id TEXT NOT NULL PRIMARY KEY,
+                        DisplayName TEXT NOT NULL,
+                        Role INTEGER NOT NULL,
+                        IsActive INTEGER NOT NULL
+                    );
+                    CREATE TABLE Products (
+                        Id TEXT NOT NULL PRIMARY KEY,
+                        Name TEXT NOT NULL,
+                        Category INTEGER NOT NULL,
+                        Price INTEGER NOT NULL,
+                        StockQuantity INTEGER NOT NULL,
+                        IsActive INTEGER NOT NULL,
+                        CreatedAt TEXT NOT NULL,
+                        UpdatedAt TEXT NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IX_Products_Category_Name ON Products(Category, Name);
+                    CREATE TABLE DeliveryOptions (
+                        Id TEXT NOT NULL PRIMARY KEY,
+                        Name TEXT NOT NULL,
+                        Type INTEGER NOT NULL,
+                        Fee INTEGER NOT NULL,
+                        IsActive INTEGER NOT NULL
+                    );
+                    CREATE UNIQUE INDEX IX_DeliveryOptions_Name ON DeliveryOptions(Name);
+                    """;
+                await command.ExecuteNonQueryAsync();
+            }
+
+            var options = new DbContextOptionsBuilder<CafePosDbContext>()
+                .UseSqlite($"Data Source={path};Pooling=False").Options;
+            var initializer = new AppInitializer(
+                new TestPaths(path), new NoBackup(), new TestFactory(options), NullLogger<AppInitializer>.Instance);
+
+            await initializer.InitializeAsync();
+
+            await using var db = new CafePosDbContext(options);
+            Assert.Equal(52, await db.Products.CountAsync(x => x.IsActive));
+            Assert.True(await db.Products.AnyAsync(x =>
+                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
+
+            await using var verification = new SqliteConnection($"Data Source={path};Pooling=False");
+            await verification.OpenAsync();
+            await using var pragma = verification.CreateCommand();
+            pragma.CommandText = "SELECT 1 FROM pragma_table_info('Products') WHERE name = 'StockQuantity' LIMIT 1;";
+            Assert.Null(await pragma.ExecuteScalarAsync());
+        }
+        finally { Delete(path); }
+    }
+
+    [Fact]
     public async Task Initializer_moves_existing_food_and_drink_products_into_combos()
     {
         var path = NewPath();
