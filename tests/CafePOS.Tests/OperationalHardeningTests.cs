@@ -250,70 +250,44 @@ public sealed class OperationalHardeningTests
     }
 
     [Fact]
-    public async Task Initializer_removes_legacy_stock_quantity_column_before_seeding_products()
+    public async Task Initializer_can_destructively_reset_development_database_when_flag_is_enabled()
     {
         var path = NewPath();
+        var previousFlag = Environment.GetEnvironmentVariable("CAFEPOS_ALLOW_DESTRUCTIVE_RESET");
         try
         {
-            await using (var connection = new SqliteConnection($"Data Source={path};Pooling=False"))
-            {
-                await connection.OpenAsync();
-                await using var command = connection.CreateCommand();
-                command.CommandText = """
-                    CREATE TABLE "__EFMigrationsHistory" (
-                        "MigrationId" TEXT NOT NULL CONSTRAINT "PK___EFMigrationsHistory" PRIMARY KEY,
-                        "ProductVersion" TEXT NOT NULL
-                    );
-                    INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-                    VALUES ('20260814000000_InitialCafeSchema', '10.0.0');
-                    CREATE TABLE Employees (
-                        Id TEXT NOT NULL PRIMARY KEY,
-                        DisplayName TEXT NOT NULL,
-                        Role INTEGER NOT NULL,
-                        IsActive INTEGER NOT NULL
-                    );
-                    CREATE TABLE Products (
-                        Id TEXT NOT NULL PRIMARY KEY,
-                        Name TEXT NOT NULL,
-                        Category INTEGER NOT NULL,
-                        Price INTEGER NOT NULL,
-                        StockQuantity INTEGER NOT NULL,
-                        IsActive INTEGER NOT NULL,
-                        CreatedAt TEXT NOT NULL,
-                        UpdatedAt TEXT NOT NULL
-                    );
-                    CREATE UNIQUE INDEX IX_Products_Category_Name ON Products(Category, Name);
-                    CREATE TABLE DeliveryOptions (
-                        Id TEXT NOT NULL PRIMARY KEY,
-                        Name TEXT NOT NULL,
-                        Type INTEGER NOT NULL,
-                        Fee INTEGER NOT NULL,
-                        IsActive INTEGER NOT NULL
-                    );
-                    CREATE UNIQUE INDEX IX_DeliveryOptions_Name ON DeliveryOptions(Name);
-                    """;
-                await command.ExecuteNonQueryAsync();
-            }
-
             var options = new DbContextOptionsBuilder<CafePosDbContext>()
                 .UseSqlite($"Data Source={path};Pooling=False").Options;
+            await using (var db = new CafePosDbContext(options))
+            {
+                await db.Database.MigrateAsync();
+                db.Products.Add(new Product
+                {
+                    Name = "Borrar en desarrollo",
+                    Category = ProductCategory.Coffee,
+                    Price = 1m
+                });
+                await db.SaveChangesAsync();
+            }
+
+            var backups = new RecordingBackup();
+            Environment.SetEnvironmentVariable("CAFEPOS_ALLOW_DESTRUCTIVE_RESET", "true");
             var initializer = new AppInitializer(
-                new TestPaths(path), new NoBackup(), new TestFactory(options), NullLogger<AppInitializer>.Instance);
+                new TestPaths(path), backups, new TestFactory(options), NullLogger<AppInitializer>.Instance);
 
             await initializer.InitializeAsync();
 
-            await using var db = new CafePosDbContext(options);
-            Assert.Equal(52, await db.Products.CountAsync(x => x.IsActive));
-            Assert.True(await db.Products.AnyAsync(x =>
-                x.Name == Seed.CatalogMarker && x.Category == ProductCategory.Combos && x.IsActive));
-
-            await using var verification = new SqliteConnection($"Data Source={path};Pooling=False");
-            await verification.OpenAsync();
-            await using var pragma = verification.CreateCommand();
-            pragma.CommandText = "SELECT 1 FROM pragma_table_info('Products') WHERE name = 'StockQuantity' LIMIT 1;";
-            Assert.Null(await pragma.ExecuteScalarAsync());
+            await using var verification = new CafePosDbContext(options);
+            Assert.False(await verification.Products.AnyAsync(x => x.Name == "Borrar en desarrollo"));
+            Assert.Equal(52, await verification.Products.CountAsync(x => x.IsActive));
+            Assert.Contains("dev-reset", backups.Reasons);
+            Assert.Contains("premigration", backups.Reasons);
         }
-        finally { Delete(path); }
+        finally
+        {
+            Environment.SetEnvironmentVariable("CAFEPOS_ALLOW_DESTRUCTIVE_RESET", previousFlag);
+            Delete(path);
+        }
     }
 
     [Fact]
@@ -391,6 +365,17 @@ public sealed class OperationalHardeningTests
         public string BackupDirectory => Path.Combine(DataDirectory, "backups");
         public string LogDirectory => Path.Combine(DataDirectory, "logs");
         public string SettingsPath => Path.Combine(DataDirectory, "settings.json");
+    }
+
+    private sealed class RecordingBackup : IBackupService
+    {
+        public List<string> Reasons { get; } = [];
+        public Task<string?> CreateAsync(string reason, CancellationToken ct = default)
+        {
+            Reasons.Add(reason);
+            return Task.FromResult<string?>(null);
+        }
+        public Task RotateAsync(CancellationToken ct = default) => Task.CompletedTask;
     }
 
     private sealed class NoBackup : IBackupService

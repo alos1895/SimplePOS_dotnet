@@ -37,10 +37,10 @@ dotnet test CafePOS.slnx --configuration Debug
 ```
 
 En Windows, si el proyecto compila pero no aparece la ventana, revise el log más
-reciente en `C:\ProgramData\CafePOS\logs`. Si aparece un error de SQLite como
-`table Employees already exists`, la base local de desarrollo quedó incompatible con
-las migraciones actuales. Si no hay datos reales que conservar, puede reiniciarla y
-volver a ejecutar la app:
+reciente en `C:\ProgramData\CafePOS\logs`. Como todavía estamos en desarrollo,
+la base local puede reiniciarse cuando el esquema o las migraciones cambien. Si no
+hay datos reales que conservar, borre la carpeta de datos y vuelva a ejecutar la
+app:
 
 ```powershell
 Remove-Item -Recurse -Force "$env:ProgramData\CafePOS"
@@ -60,12 +60,11 @@ comando.
 
 Los datos se guardan en `~/Library/Application Support/CafePOS`; en Windows se usa
 `C:\ProgramData\CafePOS`. La base, `backups`, `logs` y configuración nunca
-forman parte del paquete de aplicación. Al iniciar se crea un backup si hay migrations
-pendientes y después se llama `MigrateAsync`; no se usa `EnsureCreated`.
-La migración de reconstrucción nunca se aplica automáticamente sobre una base con
-datos: el inicio falla con una instrucción accionable. Solo para reinicios de
-desarrollo explícitos, después de verificar el respaldo, puede usarse
-`CAFEPOS_ALLOW_DESTRUCTIVE_RESET=true`.
+forman parte del paquete de aplicación. Al iniciar se crea un backup si hay
+migraciones pendientes y después se llama `MigrateAsync`; no se usa `EnsureCreated`.
+Solo para reinicios de desarrollo explícitos, después de verificar el respaldo, puede
+usarse `CAFEPOS_ALLOW_DESTRUCTIVE_RESET=true`: el inicializador crea un respaldo con
+razón `dev-reset`, elimina la base local y aplica de nuevo la migración inicial limpia.
 
 El flujo operativo permite crear una orden con productos de café, bebidas, comida,
 postres o extras; todos los productos activos se pueden vender sin limitar cantidades. Capture nombre
