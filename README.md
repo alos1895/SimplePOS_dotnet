@@ -2,7 +2,7 @@
 
 > Proyecto nuevo e independiente. Todo el código, documentación, pruebas y archivos de distribución de CafePOS viven dentro de esta carpeta; el proyecto Android Comaleña permanece separado.
 
-POS local de escritorio para cafetería, construido con .NET 10, C#, Avalonia, MVVM,
+POS local de escritorio para cafetería, construido con .NET 6, C#, Avalonia, MVVM,
 EF Core y SQLite. El análisis verificable del proyecto Android de referencia y el
 mapeo de reglas están en [`docs/COMALENA_ANALYSIS.md`](docs/COMALENA_ANALYSIS.md).
 El estado de cumplimiento, brechas y riesgos encontrados en la revisión están en
@@ -10,7 +10,7 @@ El estado de cumplimiento, brechas y riesgos encontrados en la revisión están 
 
 ## Desarrollo local
 
-Para desarrollar y ejecutar CafePOS se necesita el **SDK de .NET 10** (no solamente
+Para desarrollar y ejecutar CafePOS se necesita el **SDK de .NET 8** (no solamente
 el runtime). No hacen falta Android Studio, Java, un emulador, Docker ni un servidor
 de base de datos: Avalonia crea la aplicación de escritorio y SQLite se ejecuta de
 forma local.

@@ -5,7 +5,7 @@ namespace CafePOS.Domain.Entities;
 public sealed class Product
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public ProductCategory Category { get; set; }
     public decimal Price { get; set; }
     public bool IsActive { get; set; } = true;
@@ -16,7 +16,7 @@ public sealed class Product
 public sealed class DeliveryOption
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public required string Name { get; set; }
+    public string Name { get; set; } = string.Empty;
     public DeliveryType Type { get; set; }
     public decimal Fee { get; set; }
     public bool IsActive { get; set; } = true;

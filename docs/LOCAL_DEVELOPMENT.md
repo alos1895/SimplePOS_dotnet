@@ -9,23 +9,28 @@ emuladores, Docker ni un servidor externo de base de datos.
 
 | Requisito | macOS | Windows |
 | --- | --- | --- |
-| Sistema | Una versión de macOS compatible con .NET 10 | Windows 10/11 de 64 bits |
-| Herramienta obligatoria | SDK de .NET 10 | SDK de .NET 10 |
+| Sistema | Una versión de macOS compatible con .NET 6 | Windows 8.1 o posterior de 64 bits |
+| Herramienta obligatoria | SDK de .NET 8 | SDK de .NET 8 |
 | Arquitectura | Apple Silicon (`arm64`) o Intel (`x64`) | `x64` |
 | Base de datos | SQLite, incluida mediante NuGet | SQLite, incluida mediante NuGet |
 | Editor opcional | VS Code, Rider u otro editor C# | Visual Studio, VS Code, Rider u otro editor C# |
 
 > Se necesita el **SDK**, no solamente “.NET Runtime” o “Desktop Runtime”. El
-> framework de todos los proyectos se define como `net10.0` en
+> framework de todos los proyectos se define como `net6.0` en
 > `Directory.Build.props`.
+
+> Nota de compatibilidad: el paquete publicado es autocontenido para `win-x64`,
+> por lo que las terminales de producción con Windows 8.1 no necesitan instalar
+> el SDK ni el runtime de .NET. .NET 6 ya no recibe soporte público de Microsoft;
+> esta configuración se mantiene solamente para el entorno local controlado del cliente.
 
 También se necesita Git para clonar el repositorio. Si ya se recibió una copia del
 código, Git no es indispensable para ejecutarla.
 
 ## 2. Instalar y comprobar .NET
 
-Descargue el SDK de .NET 10 desde la [página oficial de
-.NET](https://dotnet.microsoft.com/download/dotnet/10.0). En macOS seleccione el
+Descargue el SDK de .NET 8 desde la [página oficial de
+.NET](https://dotnet.microsoft.com/download/dotnet/8.0). En macOS seleccione el
 instalador correspondiente a Apple Silicon (`Arm64`) o Intel (`x64`). En Windows use
 el instalador `x64`.
 
@@ -37,8 +42,8 @@ dotnet --version
 dotnet --list-sdks
 ```
 
-El primer comando debe mostrar una versión `10.0.x`, y la lista debe contener al
-menos un SDK `10.0.x`. Si aparece que `dotnet` no existe, reinicie la terminal; si el
+El primer comando debe mostrar una versión compatible, y la lista debe contener al
+menos un SDK `8.0.x`. Si aparece que `dotnet` no existe, reinicie la terminal; si el
 problema continúa, reinstale el SDK y verifique que su directorio esté en `PATH`.
 
 ## 3. Obtener el código
@@ -149,9 +154,9 @@ ejecutará ni lo probará en macOS. Para ejecutar desde el código no hace falta
 
 ## 9. Problemas frecuentes
 
-### `The current .NET SDK does not support targeting .NET 10.0`
+### `The current .NET SDK does not support targeting .NET 6.0`
 
-Hay un SDK anterior seleccionado. Confirme `dotnet --version`, instale el SDK 10 y
+Hay un SDK anterior seleccionado. Confirme `dotnet --version`, instale el SDK 8 y
 vuelva a abrir la terminal.
 
 ### Falla `dotnet restore`

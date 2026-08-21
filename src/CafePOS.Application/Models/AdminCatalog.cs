@@ -65,5 +65,5 @@ public sealed record BusinessMetrics(
 {
     public decimal NetSales => CollectedPayments;
     public static BusinessMetrics Empty { get; } = new(
-        0, 0, 0, 0, 0, 0, new PeriodComparison(0, 0, 0, 0, 0, 0, 0, 0), [], [], [], []);
+        0, 0, 0, 0, 0, 0, new PeriodComparison(0, 0, 0, 0, 0, 0, 0, 0), Array.Empty<MetricDay>(), Array.Empty<ProductMetric>(), Array.Empty<CategoryMetric>(), Array.Empty<ProductMetric>());
 }

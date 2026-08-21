@@ -10,7 +10,7 @@ public sealed class WindowsUsbReceiptPrinter : IReceiptPrinter
 {
     public bool IsSupported => OperatingSystem.IsWindows();
     public Task<IReadOnlyList<string>> GetInstalledPrintersAsync(CancellationToken ct = default) =>
-        !IsSupported ? Task.FromResult<IReadOnlyList<string>>([]) : Task.Run<IReadOnlyList<string>>(EnumeratePrinters, ct);
+        !IsSupported ? Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>()) : Task.Run<IReadOnlyList<string>>(EnumeratePrinters, ct);
     public Task PrintAsync(string printerName, string documentName, string content, CancellationToken ct = default)
     {
         if (!IsSupported) throw new PlatformNotSupportedException("La impresión USB está disponible en Windows.");
@@ -22,7 +22,7 @@ public sealed class WindowsUsbReceiptPrinter : IReceiptPrinter
     {
         const uint flags = 2 | 4;
         EnumPrinters(flags, null, 4, IntPtr.Zero, 0, out var needed, out _);
-        if (needed == 0) return [];
+        if (needed == 0) return Array.Empty<string>();
         var buffer = Marshal.AllocHGlobal((int)needed);
         try
         {
@@ -77,7 +77,7 @@ public sealed class WindowsUsbReceiptPrinter : IReceiptPrinter
 
     private static void ThrowLastError(string message) => throw new Win32Exception(Marshal.GetLastWin32Error(), message);
     [StructLayout(LayoutKind.Sequential)] private struct PrinterInfo4 { public IntPtr PrinterName; public IntPtr ServerName; public uint Attributes; }
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct DocInfo { [MarshalAs(UnmanagedType.LPWStr)] public required string DocumentName; [MarshalAs(UnmanagedType.LPWStr)] public string? OutputFile; [MarshalAs(UnmanagedType.LPWStr)] public required string DataType; }
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)] private struct DocInfo { [MarshalAs(UnmanagedType.LPWStr)] public string DocumentName; [MarshalAs(UnmanagedType.LPWStr)] public string? OutputFile; [MarshalAs(UnmanagedType.LPWStr)] public string DataType; }
     [DllImport("winspool.drv", EntryPoint = "EnumPrintersW", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool EnumPrinters(uint flags, string? name, uint level, IntPtr buffer, uint size, out uint needed, out uint returned);
     [DllImport("winspool.drv", EntryPoint = "OpenPrinterW", SetLastError = true, CharSet = CharSet.Unicode)] private static extern bool OpenPrinter(string name, out IntPtr printer, IntPtr defaults);
     [DllImport("winspool.drv", SetLastError = true)] private static extern bool ClosePrinter(IntPtr printer);

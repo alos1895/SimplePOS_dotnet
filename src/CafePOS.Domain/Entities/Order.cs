@@ -26,8 +26,8 @@ public sealed class Order
     public OrderStatus Status { get; set; } = OrderStatus.Open;
     public DateTime? CancelledAt { get; set; }
     public string? CancellationReason { get; set; }
-    public List<OrderItem> Items { get; set; } = [];
-    public List<Payment> Payments { get; set; } = [];
+    public List<OrderItem> Items { get; set; } = new();
+    public List<Payment> Payments { get; set; } = new();
 
     public decimal Subtotal => Items.Sum(x => x.LineTotal);
     public decimal Total => Subtotal + DeliveryFee;
@@ -49,7 +49,7 @@ public sealed class OrderItem
     public Order? Order { get; set; }
     public Guid? ProductId { get; set; }
     public Product? Product { get; set; }
-    public required string ProductName { get; set; }
+    public string ProductName { get; set; } = string.Empty;
     public ProductCategory Category { get; set; }
     public decimal UnitPrice { get; set; }
     public int Quantity { get; set; }
