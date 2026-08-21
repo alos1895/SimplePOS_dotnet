@@ -43,6 +43,8 @@ public partial class MainViewModel(
 
     public IReadOnlyList<NamedOption<ProductCategory>> ProductCategories { get; } =
         Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory>(x, CategoryLabel(x))).ToList();
+    public IReadOnlyList<NamedOption<ProductCategory?>> AdminProductFilters { get; } =
+        [new NamedOption<ProductCategory?>(null, "Todas"), .. Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory?>(x, CategoryLabel(x)))];
     public IReadOnlyList<NamedOption<DeliveryType>> DeliveryTypes { get; } =
         Enum.GetValues<DeliveryType>().Select(x => new NamedOption<DeliveryType>(x, DeliveryLabel(x))).ToList();
     public IReadOnlyList<NamedOption<ManualTransactionType>> ManualTransactionTypes { get; } =
@@ -77,6 +79,7 @@ public partial class MainViewModel(
     [ObservableProperty] private Guid? adminEditingProductId;
     [ObservableProperty] private string adminProductName = "";
     [ObservableProperty] private NamedOption<ProductCategory>? selectedAdminProductCategory;
+    [ObservableProperty] private NamedOption<ProductCategory?>? selectedAdminProductFilter;
     [ObservableProperty] private decimal adminProductPrice;
     [ObservableProperty] private Guid? adminEditingDeliveryOptionId;
     [ObservableProperty] private string adminDeliveryName = "";
@@ -93,6 +96,10 @@ public partial class MainViewModel(
 
     public bool IsNotesSection => SelectedCatalogSection == CatalogSection.Notes;
     public bool IsProductSection => !IsNotesSection;
+    public IEnumerable<AdminProductItem> FilteredAdminProducts =>
+        SelectedAdminProductFilter?.Value is ProductCategory category
+            ? AdminProducts.Where(product => product.Category == category)
+            : AdminProducts;
     public bool RequiresDeliveryAddress => SelectedDeliveryOption?.Type is DeliveryType.Delivery or DeliveryType.Walking;
     public bool IsAdminHome => AdminPage == AdminPage.Home;
     public bool IsAdminProducts => AdminPage == AdminPage.Products;
@@ -121,6 +128,7 @@ public partial class MainViewModel(
         SelectedDeliveryOption = DeliveryOptions.FirstOrDefault();
         SelectedManualTransactionType = ManualTransactionTypes.First();
         SelectedAdminProductCategory = ProductCategories.First();
+        SelectedAdminProductFilter = AdminProductFilters.First();
         SelectedAdminDeliveryType = DeliveryTypes.First();
         RefreshCatalog();
         await RefreshHistory();
@@ -582,6 +590,9 @@ public partial class MainViewModel(
         OnPropertyChanged(nameof(IsAdminProducts));
     }
 
+    partial void OnSelectedAdminProductFilterChanged(NamedOption<ProductCategory?>? value) =>
+        OnPropertyChanged(nameof(FilteredAdminProducts));
+
     private void RefreshCatalog()
     {
         Products.Clear();
@@ -650,6 +661,7 @@ public partial class MainViewModel(
         adminCatalogData = await adminCatalog.GetAsync();
         AdminProducts.Clear();
         foreach (var product in adminCatalogData.Products) AdminProducts.Add(product);
+        OnPropertyChanged(nameof(FilteredAdminProducts));
         AdminDeliveryOptions.Clear();
         foreach (var option in adminCatalogData.DeliveryOptions) AdminDeliveryOptions.Add(option);
     }
