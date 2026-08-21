@@ -28,18 +28,18 @@ public partial class MainViewModel(
     IReceiptPrinter printer,
     TicketFormatter tickets) : ObservableObject
 {
-    private readonly List<CatalogItem> allCatalogItems = [];
-    private AdminCatalogData adminCatalogData = new([], []);
+    private readonly List<CatalogItem> allCatalogItems = new();
+    private AdminCatalogData adminCatalogData = new(new List<AdminProductItem>(), new List<AdminDeliveryOptionItem>());
 
-    public ObservableCollection<CatalogItem> Products { get; } = [];
-    public ObservableCollection<CartLine> Cart { get; } = [];
-    public ObservableCollection<DeliveryOptionItem> DeliveryOptions { get; } = [];
-    public ObservableCollection<Order> History { get; } = [];
-    public ObservableCollection<OrderItem> SelectedOrderItems { get; } = [];
-    public ObservableCollection<ManualTransaction> ManualTransactions { get; } = [];
-    public ObservableCollection<AdminProductItem> AdminProducts { get; } = [];
-    public ObservableCollection<AdminDeliveryOptionItem> AdminDeliveryOptions { get; } = [];
-    public ObservableCollection<string> InstalledPrinters { get; } = [];
+    public ObservableCollection<CatalogItem> Products { get; } = new();
+    public ObservableCollection<CartLine> Cart { get; } = new();
+    public ObservableCollection<DeliveryOptionItem> DeliveryOptions { get; } = new();
+    public ObservableCollection<Order> History { get; } = new();
+    public ObservableCollection<OrderItem> SelectedOrderItems { get; } = new();
+    public ObservableCollection<ManualTransaction> ManualTransactions { get; } = new();
+    public ObservableCollection<AdminProductItem> AdminProducts { get; } = new();
+    public ObservableCollection<AdminDeliveryOptionItem> AdminDeliveryOptions { get; } = new();
+    public ObservableCollection<string> InstalledPrinters { get; } = new();
 
     public IReadOnlyList<NamedOption<ProductCategory>> ProductCategories { get; } =
         Enum.GetValues<ProductCategory>().Select(x => new NamedOption<ProductCategory>(x, CategoryLabel(x))).ToList();

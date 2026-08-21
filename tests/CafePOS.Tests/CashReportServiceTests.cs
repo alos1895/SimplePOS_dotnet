@@ -14,7 +14,7 @@ public sealed class CashReportServiceTests
         var day = new DateTime(2026, 8, 13, 0, 0, 0, DateTimeKind.Utc);
         var paidOrder = Order(day.AddHours(10), OrderStatus.Paid, 100m,
             [new Payment { Method = PaymentMethod.Cash, Amount = 100m, BusinessDate = "2026-08-13" }]);
-        var openOrder = Order(day.AddHours(11), OrderStatus.Open, 50m, []);
+        var openOrder = Order(day.AddHours(11), OrderStatus.Open, 50m, Array.Empty<Payment>());
         var cancelled = Order(day.AddHours(12), OrderStatus.Cancelled, 80m,
         [
             new Payment { Method = PaymentMethod.Cash, Amount = 80m, BusinessDate = "2026-08-13" },

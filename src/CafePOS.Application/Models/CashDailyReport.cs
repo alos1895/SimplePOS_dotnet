@@ -16,5 +16,5 @@ public sealed record CashDailyReport(
     decimal TotalInCaja,
     IReadOnlyList<CategorySales> CategorySales)
 {
-    public static CashDailyReport Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, 0, []);
+    public static CashDailyReport Empty { get; } = new(0, 0, 0, 0, 0, 0, 0, 0, 0, Array.Empty<CategorySales>());
 }

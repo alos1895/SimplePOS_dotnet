@@ -265,7 +265,7 @@ public sealed class OperationalHardeningTests
                         "ProductVersion" TEXT NOT NULL
                     );
                     INSERT INTO "__EFMigrationsHistory" ("MigrationId", "ProductVersion")
-                    VALUES ('20260814000000_InitialCafeSchema', '10.0.0');
+                    VALUES ('20260814000000_InitialCafeSchema', '6.0.36');
                     CREATE TABLE Employees (
                         Id TEXT NOT NULL PRIMARY KEY,
                         DisplayName TEXT NOT NULL,

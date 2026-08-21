@@ -5,7 +5,7 @@ namespace CafePOS.Domain.Entities;
 public sealed class ManualTransaction
 {
     public Guid Id { get; set; } = Guid.NewGuid();
-    public required string Concept { get; set; }
+    public string Concept { get; set; } = string.Empty;
     public decimal Amount { get; set; }
     public ManualTransactionType Type { get; set; }
     public ManualTransactionKind Kind { get; set; } = ManualTransactionKind.Entry;
