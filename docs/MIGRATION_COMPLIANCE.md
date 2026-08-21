@@ -9,8 +9,9 @@ sin una prueba de aceptación en el hardware de la cafetería.
 La migración a cafetería está implementada: solución por capas, Avalonia/MVVM, EF
 Core/SQLite, catálogo genérico, órdenes con snapshots, pagos
 divididos, clientes, entregas, caja, movimientos manuales, respaldos y métricas.
-La migración `RebuildCafeSchema` es deliberadamente destructiva: respalda antes de
-aplicarse y elimina el esquema anterior para no conservar conceptos especializados.
+La migración inicial de desarrollo es limpia y parte del esquema actual de cafetería;
+los reinicios destructivos quedan limitados al flag explícito
+`CAFEPOS_ALLOW_DESTRUCTIVE_RESET=true`.
 
 No debe declararse completo el alcance total: faltan usuarios reales y un updater
 instalado por un proceso externo.
@@ -21,7 +22,7 @@ instalado por un proceso externo.
 |---|---|---|
 | .NET, C#, Avalonia, MVVM, DI | Cumple | Cuatro proyectos productivos, Toolkit MVVM y composición en `Program`/`DependencyInjection`. |
 | Dominio/Application/Infrastructure/Desktop | Cumple | Separación pragmática sin CQRS ni repositorio genérico. |
-| EF Core + SQLite + migrations | Cumple | `MigrateAsync`, migración destructiva versionada y sin `EnsureCreated`; hay prueba de creación de esquema. |
+| EF Core + SQLite + migrations | Cumple | `MigrateAsync`, migración inicial limpia y sin `EnsureCreated`; hay prueba de creación de esquema y reset local explícito para desarrollo. |
 | Ruta persistente por SO | Cumple | ProgramData en Windows, Application Support en macOS y LocalApplicationData en Linux. |
 | Backup premigración/manual/rotación | Cumple base | Copia consistente mediante API de backup SQLite y retención de 30; backup diario aún es futuro. |
 | Productos | Cumple | CRUD genérico por categoría, precio y estado activo; esta primera versión no limita cantidades. |
@@ -45,8 +46,8 @@ nombres reales permanece en `COMALENA_ANALYSIS.md`.
 
 No se copiaron Compose, AndroidViewModel, Room/DAO, singleton de base, Bluetooth
 Android, impresión, JSON como fuente de verdad ni dinero en Double. La migración
-actual sí es destructiva por decisión explícita para sustituir el esquema anterior
-por productos de cafetería.
+actual parte limpia del esquema de cafetería; si una base local de desarrollo queda
+incompatible, el reset destructivo exige un flag explícito y respaldo previo.
 
 ## Riesgos y siguiente etapa recomendada
 

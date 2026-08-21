@@ -4,8 +4,8 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace CafePOS.Infrastructure.Persistence.Migrations;
 
 [DbContext(typeof(CafePosDbContext))]
-[Migration("20260814000000_InitialCafeSchema")]
-public sealed class InitialCafeSchema : Migration
+[Migration("20260821000000_InitialDevelopmentSchema")]
+public sealed class InitialDevelopmentSchema : Migration
 {
     protected override void Up(MigrationBuilder migrationBuilder)
     {

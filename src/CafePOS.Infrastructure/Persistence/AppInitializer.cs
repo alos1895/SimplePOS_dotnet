@@ -17,13 +17,19 @@ public sealed class AppInitializer(
         Directory.CreateDirectory(paths.DataDirectory);
         Directory.CreateDirectory(paths.LogDirectory);
         await using var db = await factory.CreateDbContextAsync(ct);
+        if (AllowsDestructiveReset())
+        {
+            log.LogWarning("Destructive development database reset requested with CAFEPOS_ALLOW_DESTRUCTIVE_RESET");
+            await backups.CreateAsync("dev-reset", ct);
+            await db.Database.EnsureDeletedAsync(ct);
+        }
+
         if ((await db.Database.GetPendingMigrationsAsync(ct)).Any())
         {
-            log.LogInformation("Applying initial cafe schema");
+            log.LogInformation("Applying cafe schema migrations");
             await backups.CreateAsync("premigration", ct);
             await db.Database.MigrateAsync(ct);
         }
-        await RemoveLegacyProductStockColumnAsync(db, ct);
 
         if (!await db.Employees.AnyAsync(employee => employee.Id == Seed.DefaultEmployeeId, ct))
             db.Employees.Add(new Employee { Id = Seed.DefaultEmployeeId, DisplayName = "Administrador", Role = EmployeeRole.Admin });
@@ -60,47 +66,11 @@ public sealed class AppInitializer(
         await db.SaveChangesAsync(ct);
     }
 
-    private static async Task RemoveLegacyProductStockColumnAsync(CafePosDbContext db, CancellationToken ct)
-    {
-        var connection = db.Database.GetDbConnection();
-        var closeConnection = connection.State != System.Data.ConnectionState.Open;
-        if (closeConnection) await connection.OpenAsync(ct);
-        try
-        {
-            await using var command = connection.CreateCommand();
-            command.CommandText = "SELECT 1 FROM pragma_table_info('Products') WHERE name = 'StockQuantity' LIMIT 1;";
-            if (await command.ExecuteScalarAsync(ct) is null) return;
-        }
-        finally
-        {
-            if (closeConnection) await connection.CloseAsync();
-        }
-
-        await db.Database.ExecuteSqlRawAsync("""
-            PRAGMA foreign_keys = OFF;
-
-            CREATE TABLE Products_CurrentSchema (
-                Id TEXT NOT NULL PRIMARY KEY,
-                Name TEXT NOT NULL,
-                Category INTEGER NOT NULL,
-                Price INTEGER NOT NULL,
-                IsActive INTEGER NOT NULL,
-                CreatedAt TEXT NOT NULL,
-                UpdatedAt TEXT NOT NULL
-            );
-
-            INSERT INTO Products_CurrentSchema (Id, Name, Category, Price, IsActive, CreatedAt, UpdatedAt)
-            SELECT Id, Name, Category, Price, IsActive, CreatedAt, UpdatedAt
-            FROM Products;
-
-            DROP TABLE Products;
-            ALTER TABLE Products_CurrentSchema RENAME TO Products;
-            CREATE UNIQUE INDEX IX_Products_Category_Name ON Products(Category, Name);
-
-            PRAGMA foreign_keys = ON;
-            """, ct);
-    }
-
+    private static bool AllowsDestructiveReset() =>
+        string.Equals(
+            Environment.GetEnvironmentVariable("CAFEPOS_ALLOW_DESTRUCTIVE_RESET"),
+            "true",
+            StringComparison.OrdinalIgnoreCase);
 }
 
 public static class Seed
